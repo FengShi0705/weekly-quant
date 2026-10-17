@@ -1,0 +1,293 @@
+ticker,name,country,region,currency,lot_size,brokers
+AAPL,Apple,US,US,USD,1,t212|ibkr
+MSFT,Microsoft,US,US,USD,1,t212|ibkr
+NVDA,NVIDIA,US,US,USD,1,t212|ibkr
+AMZN,Amazon,US,US,USD,1,t212|ibkr
+GOOGL,Alphabet A,US,US,USD,1,t212|ibkr
+META,Meta Platforms,US,US,USD,1,t212|ibkr
+BRK-B,Berkshire Hathaway B,US,US,USD,1,t212|ibkr
+AVGO,Broadcom,US,US,USD,1,t212|ibkr
+TSLA,Tesla,US,US,USD,1,t212|ibkr
+LLY,Eli Lilly,US,US,USD,1,t212|ibkr
+JPM,JPMorgan Chase,US,US,USD,1,t212|ibkr
+V,Visa,US,US,USD,1,t212|ibkr
+UNH,UnitedHealth,US,US,USD,1,t212|ibkr
+XOM,Exxon Mobil,US,US,USD,1,t212|ibkr
+MA,Mastercard,US,US,USD,1,t212|ibkr
+JNJ,Johnson & Johnson,US,US,USD,1,t212|ibkr
+PG,Procter & Gamble,US,US,USD,1,t212|ibkr
+HD,Home Depot,US,US,USD,1,t212|ibkr
+COST,Costco,US,US,USD,1,t212|ibkr
+ABBV,AbbVie,US,US,USD,1,t212|ibkr
+MRK,Merck & Co,US,US,USD,1,t212|ibkr
+WMT,Walmart,US,US,USD,1,t212|ibkr
+NFLX,Netflix,US,US,USD,1,t212|ibkr
+CRM,Salesforce,US,US,USD,1,t212|ibkr
+BAC,Bank of America,US,US,USD,1,t212|ibkr
+CVX,Chevron,US,US,USD,1,t212|ibkr
+KO,Coca-Cola,US,US,USD,1,t212|ibkr
+PEP,PepsiCo,US,US,USD,1,t212|ibkr
+ADBE,Adobe,US,US,USD,1,t212|ibkr
+AMD,Advanced Micro Devices,US,US,USD,1,t212|ibkr
+TMO,Thermo Fisher,US,US,USD,1,t212|ibkr
+LIN,Linde,US,US,USD,1,t212|ibkr
+MCD,McDonald's,US,US,USD,1,t212|ibkr
+ACN,Accenture,US,US,USD,1,t212|ibkr
+CSCO,Cisco,US,US,USD,1,t212|ibkr
+ABT,Abbott Laboratories,US,US,USD,1,t212|ibkr
+ORCL,Oracle,US,US,USD,1,t212|ibkr
+WFC,Wells Fargo,US,US,USD,1,t212|ibkr
+DHR,Danaher,US,US,USD,1,t212|ibkr
+DIS,Walt Disney,US,US,USD,1,t212|ibkr
+INTU,Intuit,US,US,USD,1,t212|ibkr
+TXN,Texas Instruments,US,US,USD,1,t212|ibkr
+QCOM,Qualcomm,US,US,USD,1,t212|ibkr
+VZ,Verizon,US,US,USD,1,t212|ibkr
+CAT,Caterpillar,US,US,USD,1,t212|ibkr
+AMGN,Amgen,US,US,USD,1,t212|ibkr
+IBM,IBM,US,US,USD,1,t212|ibkr
+PFE,Pfizer,US,US,USD,1,t212|ibkr
+CMCSA,Comcast,US,US,USD,1,t212|ibkr
+NOW,ServiceNow,US,US,USD,1,t212|ibkr
+GE,GE Aerospace,US,US,USD,1,t212|ibkr
+UNP,Union Pacific,US,US,USD,1,t212|ibkr
+SPGI,S&P Global,US,US,USD,1,t212|ibkr
+NEE,NextEra Energy,US,US,USD,1,t212|ibkr
+PM,Philip Morris,US,US,USD,1,t212|ibkr
+HON,Honeywell,US,US,USD,1,t212|ibkr
+LOW,Lowe's,US,US,USD,1,t212|ibkr
+GS,Goldman Sachs,US,US,USD,1,t212|ibkr
+RTX,RTX,US,US,USD,1,t212|ibkr
+ISRG,Intuitive Surgical,US,US,USD,1,t212|ibkr
+BKNG,Booking Holdings,US,US,USD,1,t212|ibkr
+AMAT,Applied Materials,US,US,USD,1,t212|ibkr
+T,AT&T,US,US,USD,1,t212|ibkr
+ELV,Elevance Health,US,US,USD,1,t212|ibkr
+BLK,BlackRock,US,US,USD,1,t212|ibkr
+SYK,Stryker,US,US,USD,1,t212|ibkr
+MS,Morgan Stanley,US,US,USD,1,t212|ibkr
+PLD,Prologis,US,US,USD,1,t212|ibkr
+MDT,Medtronic,US,US,USD,1,t212|ibkr
+LMT,Lockheed Martin,US,US,USD,1,t212|ibkr
+DE,Deere,US,US,USD,1,t212|ibkr
+TJX,TJX Companies,US,US,USD,1,t212|ibkr
+VRTX,Vertex Pharmaceuticals,US,US,USD,1,t212|ibkr
+ADP,Automatic Data Processing,US,US,USD,1,t212|ibkr
+SCHW,Charles Schwab,US,US,USD,1,t212|ibkr
+CB,Chubb,US,US,USD,1,t212|ibkr
+GILD,Gilead Sciences,US,US,USD,1,t212|ibkr
+MMC,Marsh McLennan,US,US,USD,1,t212|ibkr
+ADI,Analog Devices,US,US,USD,1,t212|ibkr
+REGN,Regeneron,US,US,USD,1,t212|ibkr
+C,Citigroup,US,US,USD,1,t212|ibkr
+MDLZ,Mondelez,US,US,USD,1,t212|ibkr
+CI,Cigna,US,US,USD,1,t212|ibkr
+LRCX,Lam Research,US,US,USD,1,t212|ibkr
+BMY,Bristol-Myers Squibb,US,US,USD,1,t212|ibkr
+SBUX,Starbucks,US,US,USD,1,t212|ibkr
+MU,Micron Technology,US,US,USD,1,t212|ibkr
+PGR,Progressive,US,US,USD,1,t212|ibkr
+ZTS,Zoetis,US,US,USD,1,t212|ibkr
+SO,Southern Company,US,US,USD,1,t212|ibkr
+BSX,Boston Scientific,US,US,USD,1,t212|ibkr
+ETN,Eaton,US,US,USD,1,t212|ibkr
+AMT,American Tower,US,US,USD,1,t212|ibkr
+DUK,Duke Energy,US,US,USD,1,t212|ibkr
+KLAC,KLA,US,US,USD,1,t212|ibkr
+PANW,Palo Alto Networks,US,US,USD,1,t212|ibkr
+SNPS,Synopsys,US,US,USD,1,t212|ibkr
+CDNS,Cadence Design,US,US,USD,1,t212|ibkr
+EQIX,Equinix,US,US,USD,1,t212|ibkr
+ICE,Intercontinental Exchange,US,US,USD,1,t212|ibkr
+SHW,Sherwin-Williams,US,US,USD,1,t212|ibkr
+CME,CME Group,US,US,USD,1,t212|ibkr
+MO,Altria,US,US,USD,1,t212|ibkr
+WM,Waste Management,US,US,USD,1,t212|ibkr
+CL,Colgate-Palmolive,US,US,USD,1,t212|ibkr
+APD,Air Products,US,US,USD,1,t212|ibkr
+ITW,Illinois Tool Works,US,US,USD,1,t212|ibkr
+MCK,McKesson,US,US,USD,1,t212|ibkr
+FDX,FedEx,US,US,USD,1,t212|ibkr
+USB,US Bancorp,US,US,USD,1,t212|ibkr
+PNC,PNC Financial,US,US,USD,1,t212|ibkr
+EMR,Emerson Electric,US,US,USD,1,t212|ibkr
+NOC,Northrop Grumman,US,US,USD,1,t212|ibkr
+GD,General Dynamics,US,US,USD,1,t212|ibkr
+TGT,Target,US,US,USD,1,t212|ibkr
+ORLY,O'Reilly Automotive,US,US,USD,1,t212|ibkr
+AZO,AutoZone,US,US,USD,1,t212|ibkr
+MAR,Marriott,US,US,USD,1,t212|ibkr
+HCA,HCA Healthcare,US,US,USD,1,t212|ibkr
+CSX,CSX,US,US,USD,1,t212|ibkr
+NSC,Norfolk Southern,US,US,USD,1,t212|ibkr
+PH,Parker-Hannifin,US,US,USD,1,t212|ibkr
+ECL,Ecolab,US,US,USD,1,t212|ibkr
+APH,Amphenol,US,US,USD,1,t212|ibkr
+MSI,Motorola Solutions,US,US,USD,1,t212|ibkr
+ROP,Roper Technologies,US,US,USD,1,t212|ibkr
+AON,Aon,US,US,USD,1,t212|ibkr
+CTAS,Cintas,US,US,USD,1,t212|ibkr
+TT,Trane Technologies,US,US,USD,1,t212|ibkr
+PCAR,Paccar,US,US,USD,1,t212|ibkr
+AJG,Arthur J Gallagher,US,US,USD,1,t212|ibkr
+HLT,Hilton,US,US,USD,1,t212|ibkr
+MNST,Monster Beverage,US,US,USD,1,t212|ibkr
+ODFL,Old Dominion Freight,US,US,USD,1,t212|ibkr
+FAST,Fastenal,US,US,USD,1,t212|ibkr
+KMB,Kimberly-Clark,US,US,USD,1,t212|ibkr
+AZN.L,AstraZeneca,UK,UK,GBp,1,t212|ibkr
+SHEL.L,Shell,UK,UK,GBp,1,t212|ibkr
+HSBA.L,HSBC,UK,UK,GBp,1,t212|ibkr
+ULVR.L,Unilever,UK,UK,GBp,1,t212|ibkr
+BP.L,BP,UK,UK,GBp,1,t212|ibkr
+GSK.L,GSK,UK,UK,GBp,1,t212|ibkr
+RIO.L,Rio Tinto,UK,UK,GBp,1,t212|ibkr
+REL.L,RELX,UK,UK,GBp,1,t212|ibkr
+DGE.L,Diageo,UK,UK,GBp,1,t212|ibkr
+BATS.L,British American Tobacco,UK,UK,GBp,1,t212|ibkr
+LSEG.L,London Stock Exchange Group,UK,UK,GBp,1,t212|ibkr
+NG.L,National Grid,UK,UK,GBp,1,t212|ibkr
+GLEN.L,Glencore,UK,UK,GBp,1,t212|ibkr
+AAL.L,Anglo American,UK,UK,GBp,1,t212|ibkr
+BARC.L,Barclays,UK,UK,GBp,1,t212|ibkr
+LLOY.L,Lloyds Banking Group,UK,UK,GBp,1,t212|ibkr
+RKT.L,Reckitt Benckiser,UK,UK,GBp,1,t212|ibkr
+CPG.L,Compass Group,UK,UK,GBp,1,t212|ibkr
+PRU.L,Prudential,UK,UK,GBp,1,t212|ibkr
+VOD.L,Vodafone,UK,UK,GBp,1,t212|ibkr
+TSCO.L,Tesco,UK,UK,GBp,1,t212|ibkr
+BA.L,BAE Systems,UK,UK,GBp,1,t212|ibkr
+EXPN.L,Experian,UK,UK,GBp,1,t212|ibkr
+III.L,3i Group,UK,UK,GBp,1,t212|ibkr
+IMB.L,Imperial Brands,UK,UK,GBp,1,t212|ibkr
+LGEN.L,Legal & General,UK,UK,GBp,1,t212|ibkr
+NWG.L,NatWest Group,UK,UK,GBp,1,t212|ibkr
+SSE.L,SSE,UK,UK,GBp,1,t212|ibkr
+AHT.L,Ashtead Group,UK,UK,GBp,1,t212|ibkr
+ABF.L,Associated British Foods,UK,UK,GBp,1,t212|ibkr
+BT-A.L,BT Group,UK,UK,GBp,1,t212|ibkr
+STAN.L,Standard Chartered,UK,UK,GBp,1,t212|ibkr
+RR.L,Rolls-Royce,UK,UK,GBp,1,t212|ibkr
+WPP.L,WPP,UK,UK,GBp,1,t212|ibkr
+SGE.L,Sage Group,UK,UK,GBp,1,t212|ibkr
+AV.L,Aviva,UK,UK,GBp,1,t212|ibkr
+ANTO.L,Antofagasta,UK,UK,GBp,1,t212|ibkr
+SAP.DE,SAP,DE,EU,EUR,1,t212|ibkr
+SIE.DE,Siemens,DE,EU,EUR,1,t212|ibkr
+ALV.DE,Allianz,DE,EU,EUR,1,t212|ibkr
+DTE.DE,Deutsche Telekom,DE,EU,EUR,1,t212|ibkr
+MBG.DE,Mercedes-Benz,DE,EU,EUR,1,t212|ibkr
+BMW.DE,BMW,DE,EU,EUR,1,t212|ibkr
+BAS.DE,BASF,DE,EU,EUR,1,t212|ibkr
+BAYN.DE,Bayer,DE,EU,EUR,1,t212|ibkr
+MUV2.DE,Munich Re,DE,EU,EUR,1,t212|ibkr
+ADS.DE,Adidas,DE,EU,EUR,1,t212|ibkr
+IFX.DE,Infineon,DE,EU,EUR,1,t212|ibkr
+DBK.DE,Deutsche Bank,DE,EU,EUR,1,t212|ibkr
+DHL.DE,DHL Group,DE,EU,EUR,1,t212|ibkr
+RWE.DE,RWE,DE,EU,EUR,1,t212|ibkr
+EOAN.DE,E.ON,DE,EU,EUR,1,t212|ibkr
+VOW3.DE,Volkswagen Pref,DE,EU,EUR,1,t212|ibkr
+DB1.DE,Deutsche Boerse,DE,EU,EUR,1,t212|ibkr
+HEN3.DE,Henkel Pref,DE,EU,EUR,1,t212|ibkr
+MRK.DE,Merck KGaA,DE,EU,EUR,1,t212|ibkr
+BEI.DE,Beiersdorf,DE,EU,EUR,1,t212|ibkr
+SHL.DE,Siemens Healthineers,DE,EU,EUR,1,t212|ibkr
+MC.PA,LVMH,FR,EU,EUR,1,t212|ibkr
+OR.PA,L'Oreal,FR,EU,EUR,1,t212|ibkr
+TTE.PA,TotalEnergies,FR,EU,EUR,1,t212|ibkr
+SAN.PA,Sanofi,FR,EU,EUR,1,t212|ibkr
+AIR.PA,Airbus,FR,EU,EUR,1,t212|ibkr
+SU.PA,Schneider Electric,FR,EU,EUR,1,t212|ibkr
+AI.PA,Air Liquide,FR,EU,EUR,1,t212|ibkr
+BNP.PA,BNP Paribas,FR,EU,EUR,1,t212|ibkr
+RMS.PA,Hermes,FR,EU,EUR,1,t212|ibkr
+EL.PA,EssilorLuxottica,FR,EU,EUR,1,t212|ibkr
+CS.PA,AXA,FR,EU,EUR,1,t212|ibkr
+DG.PA,Vinci,FR,EU,EUR,1,t212|ibkr
+KER.PA,Kering,FR,EU,EUR,1,t212|ibkr
+SAF.PA,Safran,FR,EU,EUR,1,t212|ibkr
+BN.PA,Danone,FR,EU,EUR,1,t212|ibkr
+ACA.PA,Credit Agricole,FR,EU,EUR,1,t212|ibkr
+GLE.PA,Societe Generale,FR,EU,EUR,1,t212|ibkr
+CAP.PA,Capgemini,FR,EU,EUR,1,t212|ibkr
+RI.PA,Pernod Ricard,FR,EU,EUR,1,t212|ibkr
+VIE.PA,Veolia,FR,EU,EUR,1,t212|ibkr
+ORA.PA,Orange,FR,EU,EUR,1,t212|ibkr
+EN.PA,Bouygues,FR,EU,EUR,1,t212|ibkr
+SGO.PA,Saint-Gobain,FR,EU,EUR,1,t212|ibkr
+DSY.PA,Dassault Systemes,FR,EU,EUR,1,t212|ibkr
+ASML.AS,ASML,NL,EU,EUR,1,t212|ibkr
+INGA.AS,ING Group,NL,EU,EUR,1,t212|ibkr
+AD.AS,Ahold Delhaize,NL,EU,EUR,1,t212|ibkr
+PRX.AS,Prosus,NL,EU,EUR,1,t212|ibkr
+HEIA.AS,Heineken,NL,EU,EUR,1,t212|ibkr
+PHIA.AS,Philips,NL,EU,EUR,1,t212|ibkr
+WKL.AS,Wolters Kluwer,NL,EU,EUR,1,t212|ibkr
+ASM.AS,ASM International,NL,EU,EUR,1,t212|ibkr
+ITX.MC,Inditex,ES,EU,EUR,1,t212|ibkr
+SAN.MC,Banco Santander,ES,EU,EUR,1,t212|ibkr
+IBE.MC,Iberdrola,ES,EU,EUR,1,t212|ibkr
+BBVA.MC,BBVA,ES,EU,EUR,1,t212|ibkr
+TEF.MC,Telefonica,ES,EU,EUR,1,t212|ibkr
+AMS.MC,Amadeus,ES,EU,EUR,1,t212|ibkr
+ENEL.MI,Enel,IT,EU,EUR,1,t212|ibkr
+ISP.MI,Intesa Sanpaolo,IT,EU,EUR,1,t212|ibkr
+UCG.MI,UniCredit,IT,EU,EUR,1,t212|ibkr
+ENI.MI,Eni,IT,EU,EUR,1,t212|ibkr
+RACE.MI,Ferrari,IT,EU,EUR,1,t212|ibkr
+G.MI,Generali,IT,EU,EUR,1,t212|ibkr
+NESN.SW,Nestle,CH,CH,CHF,1,t212|ibkr
+NOVN.SW,Novartis,CH,CH,CHF,1,t212|ibkr
+ROG.SW,Roche,CH,CH,CHF,1,t212|ibkr
+UBSG.SW,UBS Group,CH,CH,CHF,1,t212|ibkr
+ZURN.SW,Zurich Insurance,CH,CH,CHF,1,t212|ibkr
+ABBN.SW,ABB,CH,CH,CHF,1,t212|ibkr
+CFR.SW,Richemont,CH,CH,CHF,1,t212|ibkr
+SIKA.SW,Sika,CH,CH,CHF,1,t212|ibkr
+LONN.SW,Lonza,CH,CH,CHF,1,t212|ibkr
+GIVN.SW,Givaudan,CH,CH,CHF,1,t212|ibkr
+NOVO-B.CO,Novo Nordisk,DK,NORDIC,DKK,1,ibkr
+DSV.CO,DSV,DK,NORDIC,DKK,1,ibkr
+MAERSK-B.CO,AP Moller-Maersk,DK,NORDIC,DKK,1,ibkr
+VWS.CO,Vestas Wind,DK,NORDIC,DKK,1,ibkr
+CARL-B.CO,Carlsberg,DK,NORDIC,DKK,1,ibkr
+ATCO-A.ST,Atlas Copco,SE,NORDIC,SEK,1,ibkr
+VOLV-B.ST,Volvo,SE,NORDIC,SEK,1,ibkr
+INVE-B.ST,Investor AB,SE,NORDIC,SEK,1,ibkr
+ERIC-B.ST,Ericsson,SE,NORDIC,SEK,1,ibkr
+HM-B.ST,H&M,SE,NORDIC,SEK,1,ibkr
+SAND.ST,Sandvik,SE,NORDIC,SEK,1,ibkr
+ASSA-B.ST,Assa Abloy,SE,NORDIC,SEK,1,ibkr
+NOKIA.HE,Nokia,FI,NORDIC,EUR,1,ibkr
+KNEBV.HE,Kone,FI,NORDIC,EUR,1,ibkr
+SAMPO.HE,Sampo,FI,NORDIC,EUR,1,ibkr
+RY.TO,Royal Bank of Canada,CA,CA,CAD,1,ibkr
+TD.TO,Toronto-Dominion Bank,CA,CA,CAD,1,ibkr
+SHOP.TO,Shopify,CA,CA,CAD,1,ibkr
+ENB.TO,Enbridge,CA,CA,CAD,1,ibkr
+CNR.TO,Canadian National Railway,CA,CA,CAD,1,ibkr
+CP.TO,Canadian Pacific Kansas City,CA,CA,CAD,1,ibkr
+BMO.TO,Bank of Montreal,CA,CA,CAD,1,ibkr
+BNS.TO,Bank of Nova Scotia,CA,CA,CAD,1,ibkr
+CNQ.TO,Canadian Natural Resources,CA,CA,CAD,1,ibkr
+TRI.TO,Thomson Reuters,CA,CA,CAD,1,ibkr
+7203.T,Toyota Motor,JP,JP,JPY,100,ibkr
+6758.T,Sony Group,JP,JP,JPY,100,ibkr
+8306.T,Mitsubishi UFJ,JP,JP,JPY,100,ibkr
+9984.T,SoftBank Group,JP,JP,JPY,100,ibkr
+6861.T,Keyence,JP,JP,JPY,100,ibkr
+8035.T,Tokyo Electron,JP,JP,JPY,100,ibkr
+6501.T,Hitachi,JP,JP,JPY,100,ibkr
+7974.T,Nintendo,JP,JP,JPY,100,ibkr
+4063.T,Shin-Etsu Chemical,JP,JP,JPY,100,ibkr
+8058.T,Mitsubishi Corp,JP,JP,JPY,100,ibkr
+9983.T,Fast Retailing,JP,JP,JPY,100,ibkr
+6098.T,Recruit Holdings,JP,JP,JPY,100,ibkr
+0700.HK,Tencent,HK,HK,HKD,100,ibkr
+9988.HK,Alibaba,HK,HK,HKD,100,ibkr
+0005.HK,HSBC Holdings HK,HK,HK,HKD,400,ibkr
+1299.HK,AIA Group,HK,HK,HKD,200,ibkr
+0939.HK,China Construction Bank,HK,HK,HKD,1000,ibkr
+3690.HK,Meituan,HK,HK,HKD,100,ibkr
+0388.HK,Hong Kong Exchanges,HK,HK,HKD,100,ibkr

@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+data/cache/
+reports/
+holdings.csv
+.pytest_cache/

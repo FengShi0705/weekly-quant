@@ -1,0 +1,71 @@
+# Weekly global equity strategy — all settings in one place.
+# Every number here is an assumption you should check against your own broker statements.
+
+account:
+  base_currency: USD        # currency your account is valued in: USD, GBP or EUR
+  capital: 10000            # starting capital in base currency
+  broker: t212              # t212 or ibkr — selects the cost model and the tradable universe
+  fractional_shares: true   # T212 supports fractional on most stocks; IBKR on US + some EU
+
+universe:
+  file: universe/global_large_caps.csv
+  # Regions to trade. JP/HK trade in board lots of 100 shares, so they are impractical at 10k.
+  regions: [US, UK, EU, CH, NORDIC, CA]
+  min_price_history_days: 300     # need ~1y of prices before a stock gets a score
+  min_dollar_volume_60d: 5.0e+6   # liquidity floor, in base currency per day
+
+data:
+  start: "2010-01-01"
+  cache_dir: data/cache
+
+model:
+  label_horizon_weeks: 1    # predict next-week return rank
+  train_window_weeks: 260   # rolling 5y of history per fit
+  min_train_weeks: 156      # need 3y before the first live prediction
+  retrain_every_weeks: 4
+  # Blend of ML prediction and a transparent momentum baseline; 1.0 = pure ML.
+  ml_weight: 0.7
+  lgbm:
+    n_estimators: 300
+    learning_rate: 0.03
+    num_leaves: 15
+    min_child_samples: 200
+    subsample: 0.8
+    subsample_freq: 1
+    colsample_bytree: 0.8
+    reg_lambda: 5.0
+    verbose: -1
+
+portfolio:
+  n_positions: 15
+  hold_rank: 45             # keep a holding while it ranks inside the top 45 (cuts turnover)
+  max_per_country: 6
+  cash_buffer: 0.02         # keep 2% cash for fees and FX
+  min_trade_value: 75       # skip trades smaller than this (base currency)
+  rebalance_drift: 0.30     # only resize a kept position if it drifted >30% from target
+  regime_filter: true       # halve exposure when the universe is below its 40-week average
+  regime_exposure: 0.5
+
+costs:
+  slippage_bps: 10          # spread + market impact for a retail order in a large cap
+  # Taxes on buys, by country of listing.
+  buy_tax_bps: {UK: 50, FR: 30, IT: 10, ES: 20}
+  t212:
+    commission_pct: 0.0
+    min_commission: 0.0
+    fx_fee_bps: 15          # 0.15% on every trade in a currency other than base
+  ibkr:                     # IBKR Pro tiered, approximate
+    us_per_share: 0.0035
+    us_min: 0.35
+    us_max_pct: 0.01
+    intl_commission_pct: 0.0005
+    intl_min: 1.5           # roughly EUR 1.25 / GBP 1 / CHF 1.5 depending on exchange
+    fx_fee_bps: 2           # IBKR spot FX is ~0.2 bps + USD 2 minimum, rounded up here
+
+backtest:
+  start: "2016-01-01"
+  benchmark: equal_weight   # equal-weight of the same tradable universe
+
+paths:
+  reports: reports
+  holdings: holdings.csv
