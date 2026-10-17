@@ -174,7 +174,7 @@ statements and update `config.yaml`.
 | Phase | What | Exit criteria |
 |---|---|---|
 | **0. Build** (done) | Data pipeline, features, walk-forward model, cost-aware backtest, weekly order sheet, tests | Tests pass |
-| **1. Real-data backtest** (done, Oct 2026, see §13) | Run `download` + `backtest`. Test sensitivity to `n_positions` 10/15/20, `hold_rank` 30/45/60, `ml_weight` 0/0.5/0.7/1, regime filter on/off, and both brokers | **Go** if, after costs: the blend's IC averages >0.02 with t>2, it beats the equal-weight benchmark in most rolling 1-year windows, and results hold across settings (not one lucky parameter set). Otherwise fall back to the baseline or stop |
+| **1. Real-data backtest** (done, Oct 2026, see §13–14) | Run `download` + `backtest`. Test sensitivity to `n_positions` 10/15/20, `hold_rank` 30/45/60, `ml_weight` 0/0.5/0.7/1, regime filter on/off, and both brokers | **Go** if, after costs: the blend's IC averages >0.02 with t>2, it beats the equal-weight benchmark in most rolling 1-year windows, and results hold across settings (not one lucky parameter set). Otherwise fall back to the baseline or stop |
 | **2. Paper trading** | 8–12 weeks of weekly runs without money. Record what you *would* have traded and at what prices | Live IC and turnover are in line with the backtest |
 | **3. Live, 10k** | Trade the order sheet weekly. Track costs and slippage against the model's estimates | Kill switches not hit. Costs close to the model's estimates |
 | **4. News and event features** | Use the Claude API to score earnings-call transcripts, filings (8-K/10-Q) and news on a timestamped, point-in-time basis. Candidate features: guidance-change score, tone change versus last quarter, event flags (M&A, litigation, management change). Add them as model features and test them only on data dated *after* the scoring model's training cutoff | A feature adds IC out of sample, after the cutoff |
@@ -286,3 +286,56 @@ so the backtest likely overstates the value of concentrating in them.
   volatile than an index fund (20.6% vs 13.9%), with similar worst drawdowns.
 - **Next step:** paper trade for 8–12 weeks (Phase 2). Compare live weekly IC and turnover with the
   backtest before committing the 10k.
+
+## 14. Phase 1b: testing the weights and other strategy variants (October 2026)
+
+**Rules set before running** (`research/phase1b_variants.py`, full results in
+`docs/phase1b_variants.csv`):
+
+1. Choose only on Jan 2016 – Jun 2024. The Jul 2024 – Oct 2026 holdout had already been viewed, so it
+   is reported but not used to choose.
+2. The criterion is Sharpe ratio, and a change must beat the current strategy in each of three
+   sub-periods: 2016–18, 2019–21 and 2022 – mid-2024.
+3. Report every variant tried. The current strategy wins ties.
+
+**Tested:** 40 portfolio settings on the current model (ML weight 0/30/50/70/100% × 10/15/20/25 stocks
+× equal or inverse-volatility weights), plus 3 model variants (trees with residual and within-sector
+momentum; linear model; linear with the extra features).
+
+**Result: no variant passed. The strategy is unchanged.**
+
+| ML weight (average over settings) | Selection-period Sharpe | Holdout Sharpe |
+|---|---|---|
+| 0% (momentum only) | 0.95 | 0.81 |
+| 30% | 1.14 | 1.07 |
+| 50% | 1.21 | 1.21 |
+| **70% (current)** | 1.19 | 1.17 |
+| 100% (ML only) | 1.27 | 0.98 |
+
+| Variant | Selection CAGR / Sharpe | Sub-period Sharpes | Holdout CAGR / Sharpe |
+|---|---|---|---|
+| **Current: 70% ML, 15 stocks, equal, trees** | 25.8% / 1.26 | 1.19 / 1.60 / 0.94 | 29.7% / 1.22 |
+| ML only, 10 stocks (best selection Sharpe) | 33.7% / 1.38 | 1.48 / 1.49 / 1.14 | 17.9% / 0.87 |
+| ML only, 15 stocks | 28.8% / 1.33 | 1.41 / 1.52 / 1.03 | 17.2% / 0.89 |
+| 50% ML, 10 stocks | 28.8% / 1.31 | 1.16 / 1.70 / 1.00 | 29.0% / 1.20 |
+| Trees + residual/sector momentum | 25.9% / 1.27 | 1.07 / 1.81 / 0.82 | 21.9% / 1.00 |
+| Linear model | 24.2% / 1.16 | 0.74 / 1.70 / 0.96 | 27.3% / 1.22 |
+| Linear + residual/sector momentum | 23.2% / 1.12 | 0.83 / 1.61 / 0.83 | 28.4% / 1.24 |
+
+**What we learned**
+
+- **The 50–70% ML blend is the robust region.** ML only is best in the selection period and worst in
+  the holdout. Picking it from the backtest would have cut holdout returns from ~30% to ~18% a year.
+- **10–15 stocks beat 20–25** on both return and Sharpe. **Inverse-volatility sizing did not help**
+  (average Sharpe 1.13 against 1.17 for equal weights).
+- **The trees beat a linear model** in the selection period (1.26 against 1.16), so they add value.
+- **The residual and within-sector momentum features added nothing robust.**
+- **The current settings sit on a plateau.** Neighbouring settings score 1.25–1.31, so the result
+  isn't a lucky spike. A Sharpe ratio estimated over 8.5 years has a standard error of about ±0.45,
+  and the best of 44 variants would beat the current one by ~0.1 from chance alone. Differences of
+  this size can't be told apart from noise.
+
+**Implication for the roadmap.** More tuning of the same 15 price and volume features is unlikely to
+help. Improvements should come from **new information**: point-in-time fundamentals and earnings
+revisions (Phase 5), news and filings analysis (Phase 4), and a larger universe without survivorship
+bias.
