@@ -178,7 +178,7 @@ statements and update `config.yaml`.
 |---|---|---|
 | **0. Build** (done) | Data pipeline, features, walk-forward model, cost-aware backtest, weekly order sheet, tests | Tests pass |
 | **1. Real-data backtest** (done, Oct 2026, see §13–14) | Run `download` + `backtest`. Test sensitivity to `n_positions` 10/15/20, `hold_rank` 30/45/60, `ml_weight` 0/0.5/0.7/1, regime filter on/off, and both brokers | **Go** if, after costs: the blend's IC averages >0.02 with t>2, it beats the equal-weight benchmark in most rolling 1-year windows, and results hold across settings (not one lucky parameter set). Otherwise fall back to the baseline or stop |
-| **2. Paper trading** | 8–12 weeks of weekly runs without money. Record what you *would* have traded and at what prices | Live IC and turnover are in line with the backtest |
+| **2. Paper trading** (running from 17 Oct 2026, see §15) | 8–12 weeks of weekly runs without money. Record what you *would* have traded and at what prices | Live IC and turnover are in line with the backtest |
 | **3. Live, 10k** | Trade the order sheet weekly. Track costs and slippage against the model's estimates | Kill switches not hit. Costs close to the model's estimates |
 | **4. News and event features** | Use the Claude API to score earnings-call transcripts, filings (8-K/10-Q) and news on a timestamped, point-in-time basis. Candidate features: guidance-change score, tone change versus last quarter, event flags (M&A, litigation, management change). Add them as model features and test them only on data dated *after* the scoring model's training cutoff | A feature adds IC out of sample, after the cutoff |
 | **5. Better data** | Survivorship-free and point-in-time fundamental data. Add value, quality and earnings-revision factors | Improvement survives the cleaner data |
@@ -359,3 +359,38 @@ rule's pick alongside it, so live data decides.
 help. Improvements should come from **new information**: point-in-time fundamentals and earnings
 revisions (Phase 5), news and filings analysis (Phase 4), and a larger universe without survivorship
 bias.
+
+## 15. Phase 2: paper trading (from 17 October 2026)
+
+**What runs.** Two strategies, each with a simulated £10,000 account (`paper/strategies.yaml`):
+
+| Strategy | Settings | Why |
+|---|---|---|
+| `main` | 70% ML + 30% momentum, 15 stocks (config.yaml as is) | The strategy we intend to trade |
+| `ml_only_10` | ML only, 10 stocks | The Phase 1b rule's pick (§14), run alongside so live data can separate them |
+
+**How.** A scheduled cloud run every Saturday at 08:56 UK time runs `python -m wq paper`:
+1. It fills last week's orders at the Monday close, with the backtest's cost model.
+2. It records each account's value next to buy & hold of VWRL and VUSA.
+3. It plans this week's orders.
+4. It commits everything under `paper/` to GitHub.
+
+When Trading 212 Practice API keys are set in the environment, it also runs `python -m wq t212 --execute`.
+This mirrors `main`'s orders in the Trading 212 Practice account (virtual money; the code can only reach
+the demo server) and syncs the real fills. Comparing those fills with the simulated ones measures real
+slippage and FX fees.
+
+**Review rules, set before any results** (review after 8–12 weeks, mid-December 2026 to mid-January 2027):
+
+- **Twelve weeks of returns cannot pick a winner between the two strategies.** Weekly returns are far too
+  noisy. The review checks that the system behaves as the backtest says, not which strategy made more.
+- **Go live with `main` (£10,000 in the Stocks & Shares ISA) if all of these hold:**
+  - every weekly run completed and the orders could be placed (tickers available, fractional fills worked)
+  - Trading 212's real costs (FX fee, stamp duty, slippage vs the Monday close) are no more than about
+    twice the cost model's estimate
+  - weekly turnover is in line with the backtest (about 5% a week)
+  - the average weekly IC of the live scores is not clearly negative (a single quarter is too short to
+    demand a positive one)
+- **Revisit `main` vs `ml_only_10` after about 6 months of live data, not before.**
+- **Stop and review at once** if a paper account falls 20% from its peak or a weekly run produces
+  obviously wrong orders.

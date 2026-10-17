@@ -39,6 +39,18 @@ SAP.DE,2.5
 CASH,412.50
 ```
 
+## Paper trading
+
+`python -m wq paper` advances every strategy in `paper/strategies.yaml` by one week. It fills last week's
+orders at the Monday close, records account value next to buy & hold of index funds, and plans this
+week's orders. State and weekly order sheets are kept in `paper/<strategy>/`, and `paper/summary.md`
+compares the strategies. A scheduled cloud run does this every Saturday.
+
+`python -m wq t212 [--execute]` mirrors the main strategy's orders in a **Trading 212 Practice** account
+through Trading 212's API. It can only reach the Practice (demo) server and is a dry run unless you pass
+`--execute`. It needs `T212_API_KEY` and `T212_API_SECRET` (Practice keys) as environment variables.
+Unmapped tickers can be fixed in `paper/t212_overrides.yaml` (`yahoo_ticker: T212_TICKER`).
+
 ## Layout
 
 | Path | Purpose |
@@ -51,6 +63,8 @@ CASH,412.50
 | `wq/portfolio.py`, `wq/costs.py` | selection rules, order generation, broker costs |
 | `wq/backtest.py` | historical simulation with the live rules |
 | `wq/weekly.py` | this week's order sheet and report |
+| `wq/paper.py`, `wq/t212.py` | paper-trading ledger and Trading 212 Practice mirror |
+| `paper/` | paper-trading state, weekly order sheets and summary |
 
 ## Caveats
 
