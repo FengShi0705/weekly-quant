@@ -102,6 +102,8 @@ model predicts. A EUR stock that rose 5% while EUR fell 5% is flat for a USD acc
   enforces this embargo.
 - **Retraining:** every 4 weeks, on a rolling 260-week window, with at least 156 weeks of
   history before the first prediction.
+- **Seed ensemble:** five LightGBM models trained with different random seeds, predictions averaged.
+  A single seed's luck moved backtest CAGR by up to 5 points (see §13).
 - **Score smoothing:** each stock's traded score is the average of its last 4 weekly scores. Raw
   weekly scores are noisy, and trading on them replaced half the portfolio every week (see §13).
 - **Three variants are reported side by side:** ML only, momentum baseline only, and the blend.
@@ -111,7 +113,8 @@ model predicts. A EUR stock that rose 5% while EUR fell 5% is flat for a USD acc
 
 **Metrics:** information coefficient (IC: the weekly rank correlation between score and the next
 week's return) with its t-stat, CAGR, volatility, Sharpe, max drawdown, turnover, and costs as a
-share of capital per year. The blend is always compared with the equal-weight benchmark.
+share of capital per year. The strategy is compared with the equal-weight universe (did stock-picking
+help?), with buying and holding real index funds (VWRL, VUSA), and with investing £500 a month in them.
 
 ## 7. Portfolio rules
 
@@ -211,37 +214,75 @@ weeks, score smoothing 1 or 4 weeks, hold band 45/90/150. The best tuning-period
 1-week labels, 4-week smoothing and a top-150 hold band. All 12 combinations beat the benchmark's
 CAGR on the holdout, so the result does not depend on one lucky setting.
 
-### Results with the chosen settings
+### Results with the chosen settings (5-seed ensemble)
 
-| | CAGR | Volatility | Sharpe | Max drawdown | Weekly turnover | Costs / yr |
-|---|---|---|---|---|---|---|
-| **Blend (traded)** | **25.3%** | 19.1% | **1.28** | −23.8% | 5.8% | 0.9% |
-| ML only | 25.8% | 19.9% | 1.26 | −27.0% | 7.6% | 1.2% |
-| Momentum baseline | 13.9% | 15.9% | 0.90 | −23.2% | 3.4% | 0.5% |
-| Equal-weight benchmark | 17.5% | 14.5% | 1.19 | −27.3% | — | — |
+**Lump sum: £10,000 invested once in January 2016**
 
-| Period | Blend CAGR / Sharpe | Benchmark CAGR / Sharpe |
+| | Final value | CAGR | Volatility | Sharpe | Max drawdown |
+|---|---|---|---|---|---|
+| **Strategy (70% ML + 30% momentum)** | **£127,171** | **26.6%** | 20.6% | **1.25** | −26.5% |
+| ML only | £109,143 | 24.8% | 20.8% | 1.17 | −25.0% |
+| Momentum rule only | £40,989 | 14.0% | 15.9% | 0.90 | −23.2% |
+| Buy & hold Vanguard S&P 500 (VUSA) | £51,916 | 16.5% | 15.3% | 1.08 | −25.1% |
+| Buy & hold Vanguard FTSE All-World (VWRL) | £40,638 | 13.9% | 13.9% | 1.01 | −24.6% |
+| Equal-weight stock universe | £57,192 | 17.5% | 14.5% | 1.19 | −27.3% |
+
+**Monthly investing: £500 at the start of every month, Jan 2016 – Oct 2026 (£65,000 deposited)**
+
+| Invested into | Final value | Money-weighted return (XIRR) |
 |---|---|---|
-| Tuning, Jan 2016 – Jun 2024 | 24.9% / 1.31 | 18.5% / 1.20 |
-| **Holdout, Jul 2024 – Oct 2026** | **26.9% / 1.20** | 14.1% / 1.17 |
+| **Strategy** | **£287,349** | **25.8%** |
+| Vanguard S&P 500 | £155,767 | 15.4% |
+| Vanguard FTSE All-World | £135,089 | 13.0% |
 
-The blend beat the benchmark in 9 of 11 calendar years. It lagged in 2021 (−5.1 pts) and 2022
-(−5.9 pts). Profits came from 125 different stocks; the top 10 made 49% of the total.
+![Monthly investing](docs/backtest_dca.png)
+
+Weekly turnover 5.9%, costs 0.9% of the account a year, about 22 stock swaps a year. The strategy beat
+VWRL in 10 of 11 calendar years (it lagged in 2022) and the equal-weight universe in 8 of 11. Profits
+came from 121 different stocks; the top 10 made 51% of the total (NVIDIA, Rolls-Royce, Tesla, BBVA and
+UniCredit were the largest).
+
+### Tuning period vs holdout, and why the blend rather than ML only
+
+| | Tuning, Jan 2016 – Jun 2024: CAGR / Sharpe | **Holdout, Jul 2024 – Oct 2026: CAGR / Sharpe** |
+|---|---|---|
+| **Strategy (blend)** | 25.8% / 1.26 | **29.7% / 1.22** |
+| ML only | 28.2% / 1.30 | 12.8% / 0.67 |
+| Momentum rule only | 14.7% / 0.93 | 11.2% / 0.79 |
+| Buy & hold VWRL | 13.3% / 0.95 | 16.1% / 1.23 |
+| Buy & hold VUSA | 16.7% / 1.07 | 15.7% / 1.12 |
+| Equal-weight universe | 18.5% / 1.20 | 14.1% / 1.17 |
+
+The 70/30 weight was set before any real-data result and never tuned. ML only looked better in the
+tuning period but fell to 12.8% in the holdout, while the blend held up. The momentum rule steadied
+the strategy through a weak stretch for the ML signal. This comparison uses the holdout, so the
+holdout can no longer be used to tune the weight. The weight stays at 70/30, and paper trading is the
+next independent test. In the holdout the strategy's risk-adjusted return (Sharpe 1.22) was about the
+same as the global index fund's (1.23): it earned more by taking more risk.
+
+### Seed sensitivity and the ensemble
+
+Training the same settings with four different random seeds gave 28.2%, 23.4%, 24.1% and 24.8% CAGR
+(holdout 27.6%, 20.2%, 23.2%, 17.5%). With 15 positions, one different early pick changes every later
+trade. The live model therefore averages five seeds. **Treat a single backtest figure as ±3 points.**
+Same-seed reruns are identical. An earlier 25.3% → 27.6% shift came from Yahoo revising its data
+between two downloads.
 
 ### Sector cap test
 
 A cap of 4 stocks per sector cut CAGR from 25.3% to 22.2% over the full period, and from 26.9% to
-18.9% in the holdout (Sharpe 0.96). Drawdowns didn't improve. The cap is available but off by
-default. Note that today's universe includes the semiconductor winners *because* they won, so the
-backtest likely overstates the value of concentrating in them.
+18.9% in the holdout (Sharpe 0.96), in a single-seed run. Drawdowns didn't improve. The cap is
+available but off by default. Today's universe includes the semiconductor winners *because* they won,
+so the backtest likely overstates the value of concentrating in them.
 
 ### How to read these numbers
 
-- **Survivorship bias inflates both lines.** The universe is today's large caps. The strategy's
-  *excess* over the equal-weight benchmark (~8 pts a year) is the more meaningful figure, and even
-  that is probably optimistic.
+- **Survivorship bias inflates the strategy, not the index funds.** The strategy picks from today's
+  large caps. VWRL and VUSA are real funds you could have bought in 2016. The fair stock-picking
+  measure is the excess over the equal-weight universe (~9 pts a year), and even that is probably
+  optimistic.
 - **The edge is modest and volatile.** Weekly IC is ~0.02, and the model ranks stocks better than
-  chance in only 55% of weeks (the portfolio itself is up in 60% of weeks). Two losing years against the benchmark in a row (2021–22) is normal for this kind of
-  strategy, not a sign that it has broken.
+  chance in only 55% of weeks (the portfolio itself is up in 60% of weeks). The strategy is also more
+  volatile than an index fund (20.6% vs 13.9%), with similar worst drawdowns.
 - **Next step:** paper trade for 8–12 weeks (Phase 2). Compare live weekly IC and turnover with the
   backtest before committing the 10k.
