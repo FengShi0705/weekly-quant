@@ -48,7 +48,9 @@ compares the strategies. A scheduled cloud run does this every Saturday.
 
 `python -m wq t212 [--execute]` mirrors the main strategy's orders in a **Trading 212 Practice** account
 through Trading 212's API. It can only reach the Practice (demo) server and is a dry run unless you pass
-`--execute`. It needs `T212_API_KEY` and `T212_API_SECRET` (Practice keys) as environment variables.
+`--execute`. Credentials: Practice API keys stored as a network secret on the cloud environment for
+`demo.trading212.com` (type Username and password: username = API key, password = API secret), or as the
+`T212_API_KEY` and `T212_API_SECRET` environment variables.
 Unmapped tickers can be fixed in `paper/t212_overrides.yaml` (`yahoo_ticker: T212_TICKER`).
 
 ## Layout

@@ -1,3 +1,4 @@
+import base64
 import json
 
 import pandas as pd
@@ -47,11 +48,15 @@ def client(fake):
     return t212.Client("key", "secret", http=fake, pause=0)
 
 
-def test_needs_credentials(monkeypatch):
+def test_credentials_from_env_or_network_secret(monkeypatch):
     monkeypatch.delenv("T212_API_KEY", raising=False)
     monkeypatch.delenv("T212_API_SECRET", raising=False)
-    with pytest.raises(RuntimeError):
+    assert "Authorization" not in t212.Client().headers          # the proxy's network secret signs requests
+    monkeypatch.setenv("T212_API_KEY", "k")
+    with pytest.raises(RuntimeError):                              # half a key pair is a mistake
         t212.Client()
+    monkeypatch.setenv("T212_API_SECRET", "s")
+    assert t212.Client().headers["Authorization"] == "Basic " + base64.b64encode(b"k:s").decode()
 
 
 def test_map_tickers_by_symbol_and_currency():

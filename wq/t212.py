@@ -1,7 +1,9 @@
 """Mirror a paper strategy's orders in a Trading 212 *Practice* account through the public API.
 
 Only the Practice (demo) server is reachable from this module; it cannot place real-money orders.
-Credentials come from the T212_API_KEY and T212_API_SECRET environment variables.
+Credentials: either a network secret on the cloud environment (username = API key, password = API
+secret, for demo.trading212.com), which the proxy adds to each request so the key never enters the
+session; or the T212_API_KEY and T212_API_SECRET environment variables.
 
 State is kept next to the paper strategy, in paper/t212_practice/:
   orders_placed.csv   every order sent (or skipped), with the Trading 212 order id
@@ -27,11 +29,12 @@ class Client:
     def __init__(self, key=None, secret=None, http=None, pause=1.3):
         key = key or os.environ.get("T212_API_KEY")
         secret = secret or os.environ.get("T212_API_SECRET")
-        if not key or not secret:
-            raise RuntimeError("Set T212_API_KEY and T212_API_SECRET (Practice account keys) in the environment.")
-        token = base64.b64encode(f"{key}:{secret}".encode()).decode()
+        if bool(key) != bool(secret):
+            raise RuntimeError("Set both T212_API_KEY and T212_API_SECRET, or neither (to use a network secret).")
         self.http = http or requests.Session()
-        self.headers = {"Authorization": f"Basic {token}", "Content-Type": "application/json"}
+        self.headers = {"Content-Type": "application/json"}
+        if key:
+            self.headers["Authorization"] = "Basic " + base64.b64encode(f"{key}:{secret}".encode()).decode()
         self.pause = pause
 
     def _call(self, method, path, **kw):
@@ -42,6 +45,10 @@ class Client:
             if r.status_code != 429:
                 break
             time.sleep(10 * (attempt + 1))
+        if r.status_code in (401, 403):
+            raise RuntimeError(f"{method} {path} -> HTTP {r.status_code}: Trading 212 rejected the credentials. "
+                               "Add Practice API keys as a network secret for demo.trading212.com "
+                               "(username = API key, password = API secret) or as T212_API_KEY/T212_API_SECRET.")
         if r.status_code >= 400:
             raise RuntimeError(f"{method} {path} -> HTTP {r.status_code}: {r.text[:300]}")
         return r.json()
