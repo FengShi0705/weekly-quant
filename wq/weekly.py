@@ -43,7 +43,8 @@ def run(cfg, close_local, volume, fx_usd, universe):
 
     mkt_w = market_index(px).reindex(cal.index, method="ffill")
     expo = regime_exposure(mkt_w, T, cfg)
-    targets = select_targets(scores["score"], set(shares), universe, price, equity, cfg, expo)
+    vol = panel.xs(T, level="date")["raw_vol_60"]
+    targets = select_targets(scores["score"], set(shares), universe, price, equity, cfg, expo, vol)
     orders = generate_orders(shares, targets, price, equity, universe, cfg, cash)
 
     local = close_local.ffill().loc[:T].iloc[-1]

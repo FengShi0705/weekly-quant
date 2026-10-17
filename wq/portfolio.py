@@ -5,6 +5,7 @@ simulates the same rules you will trade.
 """
 import math
 
+import numpy as np
 import pandas as pd
 
 from .costs import trade_cost
@@ -31,8 +32,11 @@ def quantize(shares, lot, whole):
     return math.trunc(shares * 1e4) / 1e4
 
 
-def select_targets(scores, held, meta, price, equity, cfg, exposure=1.0):
-    """scores: Series ticker -> score (higher is better). Returns dict ticker -> target weight."""
+def select_targets(scores, held, meta, price, equity, cfg, exposure=1.0, vol=None):
+    """scores: Series ticker -> score (higher is better). Returns dict ticker -> target weight.
+
+    vol (Series ticker -> volatility) is used when portfolio.weighting is 'inverse_vol'.
+    """
     p = cfg["portfolio"]
     n = p["n_positions"]
     weight = (1 - p["cash_buffer"]) * exposure / n
@@ -67,7 +71,28 @@ def select_targets(scores, held, meta, price, equity, cfg, exposure=1.0):
             break
         if t not in selected and buyable(t):
             add(t)
+    if p.get("weighting", "equal") == "inverse_vol" and vol is not None and selected:
+        inv = (1 / vol.reindex(selected)).fillna((1 / vol.reindex(selected)).median())
+        k = len(selected)
+        w = _bounded_weights(inv, 0.5 / k, 2.0 / k)  # between half and double the equal weight
+        return (w * weight * k).to_dict()
     return {t: weight for t in selected}
+
+
+def _bounded_weights(raw, lo, hi):
+    """Normalise raw to sum to 1 with every weight in [lo, hi]: pin the ones that break a bound,
+    then spread what's left over the rest in proportion, until none break."""
+    fixed = pd.Series(np.nan, index=raw.index)
+    for _ in range(len(raw)):
+        free = fixed.isna()
+        w = raw[free] / raw[free].sum() * (1 - fixed.sum())
+        low, high = w < lo, w > hi
+        if not (low.any() or high.any()):
+            fixed[free] = w
+            break
+        fixed[w.index[low]] = lo
+        fixed[w.index[high]] = hi
+    return fixed
 
 
 def generate_orders(shares, targets, price, equity, meta, cfg, cash=0.0):

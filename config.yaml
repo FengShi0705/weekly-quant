@@ -27,6 +27,9 @@ model:
   # Blend of ML prediction and a transparent momentum baseline; 1.0 = pure ML.
   ml_weight: 0.7
   n_seeds: 5                # average 5 models with different random seeds (single seeds ranged 23-28% CAGR)
+  type: lgbm                # lgbm (gradient-boosted trees) or ridge (linear)
+  ridge_alpha: 100.0
+  extra_features: []        # optional: resid_mom_12_1, sector_mom_12_1
   lgbm:
     n_estimators: 300
     learning_rate: 0.03
@@ -40,6 +43,7 @@ model:
 
 portfolio:
   n_positions: 15
+  weighting: equal          # equal (same amount per stock) or inverse_vol (less in volatile stocks)
   hold_rank: 150            # keep a holding while it ranks inside the top 150 of ~245 (cuts turnover)
   max_per_country: 6
   max_per_sector: 15        # 15 = no cap. A cap of 4 cut backtest CAGR 25%->22% but limits sector bets

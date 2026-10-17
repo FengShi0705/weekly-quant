@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from .features import FEATURES
+from .features import feature_list
 
 
 def baseline_score(df):
@@ -23,24 +23,48 @@ def train_slice(panel, pred_week, cfg):
     return panel[(wk >= lo) & (wk <= hi) & panel["label"].notna()]
 
 
+class RidgeModel:
+    """Linear model on the ranked features, for checking whether the trees add anything."""
+
+    def __init__(self, features, alpha):
+        self.features, self.alpha = list(features), alpha
+
+    def fit(self, X, y):
+        A = np.nan_to_num(X.to_numpy(dtype=float))  # ranks are centred, so 0 = median
+        self.coef = np.linalg.solve(A.T @ A + self.alpha * np.eye(A.shape[1]), A.T @ y.to_numpy(dtype=float))
+        return self
+
+    def predict(self, X):
+        return np.nan_to_num(np.asarray(X, dtype=float)) @ self.coef
+
+    def feature_name(self):
+        return self.features
+
+    def feature_importance(self, kind="gain"):
+        return np.abs(self.coef)
+
+
 def fit(train, cfg, seed=0):
     """Train an ensemble of n_seeds LightGBM models that differ only in their random seed.
 
     With 15 positions, one model's random choices can change a pick and every trade after it;
     averaging several seeds keeps that luck out of the portfolio.
     """
+    features = feature_list(cfg)
+    if cfg["model"].get("type", "lgbm") == "ridge":
+        return [RidgeModel(features, cfg["model"]["ridge_alpha"]).fit(train[features], train["label"])]
     import lightgbm as lgb
 
     params = dict(cfg["model"]["lgbm"])
     rounds = params.pop("n_estimators")
     params.update(objective="regression", deterministic=True, num_threads=0)
-    data = lgb.Dataset(train[FEATURES], train["label"], free_raw_data=False)
+    data = lgb.Dataset(train[features], train["label"], free_raw_data=False)
     return [lgb.train({**params, "seed": seed + i}, data, num_boost_round=rounds)
             for i in range(cfg["model"]["n_seeds"])]
 
 
 def predict(models, X):
-    return np.mean([m.predict(X[FEATURES]) for m in models], axis=0)
+    return np.mean([m.predict(X[m.feature_name()]) for m in models], axis=0)
 
 
 def _rank(s):
@@ -99,4 +123,4 @@ def information_coefficients(scores, panel):
 
 def feature_importance(models):
     gain = np.mean([m.feature_importance("gain") for m in models], axis=0)
-    return pd.Series(gain, index=FEATURES).sort_values(ascending=False)
+    return pd.Series(gain, index=models[0].feature_name()).sort_values(ascending=False)

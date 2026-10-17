@@ -4,7 +4,7 @@ import pandas as pd
 
 from wq import backtest
 from wq.backtest import prepare
-from wq.features import FEATURES
+from wq.features import EXTRA_FEATURES, FEATURES
 from wq.model import information_coefficients, train_slice, walk_forward
 
 
@@ -18,8 +18,9 @@ def test_features_ignore_the_future(cfg, noise_market):
     shocked.loc[after] *= np.random.default_rng(9).uniform(0.5, 2.0, size=(after.sum(), close.shape[1]))
     panel2, _, _ = prepare(cfg, shocked, volume, fx, universe)
 
-    a = panel.loc[:cut, FEATURES]
-    b = panel2.loc[:cut, FEATURES]
+    cols = FEATURES + EXTRA_FEATURES + ["raw_vol_60"]
+    a = panel.loc[:cut, cols]
+    b = panel2.loc[:cut, cols]
     pd.testing.assert_frame_equal(a, b)
 
 
@@ -110,3 +111,16 @@ def test_seed_ensemble_averages_member_predictions(cfg, signal_market):
     members = np.array([m.predict(X[FEATURES]) for m in models])
     assert not np.allclose(members[0], members[1])
     np.testing.assert_allclose(predict(models, X), members.mean(axis=0))
+
+
+def test_ridge_and_extra_features_run(cfg, signal_market):
+    from wq.model import fit, predict
+
+    close, volume, fx, universe = signal_market
+    panel, _, _ = prepare(cfg, close, volume, fx, universe)
+    cfg["model"].update(type="ridge", extra_features=EXTRA_FEATURES)
+    train = panel[panel["label"].notna()]
+    (model,) = fit(train, cfg)
+    assert model.feature_name() == FEATURES + EXTRA_FEATURES
+    pred = predict([model], panel.iloc[:50])
+    assert np.isfinite(pred).all()

@@ -13,6 +13,16 @@ FEATURES = [
     "vol_60", "vol_ratio", "dist_high", "ma200", "beta", "idio_vol",
     "skew_60", "max_ret_21", "log_dv60", "dv_trend",
 ]
+# Optional, switched on with model.extra_features in config.yaml.
+EXTRA_FEATURES = ["resid_mom_12_1", "sector_mom_12_1"]
+
+
+def feature_list(cfg):
+    extra = cfg["model"].get("extra_features") or []
+    unknown = set(extra) - set(EXTRA_FEATURES)
+    if unknown:
+        raise ValueError(f"unknown extra_features: {sorted(unknown)}")
+    return FEATURES + list(extra)
 
 
 def weekly_calendar(daily_index):
@@ -48,6 +58,9 @@ def _daily_features(px, volume):
     beta = cov.div(var_m, axis=0)
     var_r = r.rolling(w, min_periods=mp).var(ddof=0)
     f["beta"] = beta
+    # Momentum of the part of each return the market doesn't explain (12-1 months).
+    resid = r - beta.shift(1).mul(mkt, axis=0)
+    f["resid_mom_12_1"] = resid.rolling(231, min_periods=180).sum().shift(21)
     f["idio_vol"] = np.sqrt((var_r - beta.pow(2).mul(var_m, axis=0)).clip(lower=0))
 
     f["skew_60"] = r.rolling(60, min_periods=40).skew()
@@ -93,14 +106,18 @@ def build_panel(px_base, volume, universe, cfg):
     panel.index.names = ["date", "ticker"]
     panel = panel[panel["eligible"].astype(bool)].drop(columns="eligible")
 
+    panel["country"] = panel.index.get_level_values("ticker").map(universe["country"])
+    panel["sector"] = panel.index.get_level_values("ticker").map(universe["sector"])
+    # 12-1 momentum ranked only against the same sector, so a hot sector doesn't dominate.
+    panel["sector_mom_12_1"] = panel.groupby([panel.index.get_level_values("date"), "sector"])["mom_12_1"].rank(pct=True) - 0.5
+
     # Cross-sectional rank-normalisation removes market-wide level shifts in every feature.
     g = panel.groupby(level="date")
-    raw_dv = panel["log_dv60"].copy()
-    for c in FEATURES:
+    panel["raw_log_dv60"] = panel["log_dv60"]
+    panel["raw_vol_60"] = panel["vol_60"]
+    for c in FEATURES + ["resid_mom_12_1"]:
         panel[c] = g[c].rank(pct=True) - 0.5
-    panel["raw_log_dv60"] = raw_dv
     panel["label"] = g["fwd_ret"].rank(pct=True) - 0.5
-    panel["country"] = panel.index.get_level_values("ticker").map(universe["country"])
 
     week_no = pd.Series(np.arange(len(sig)), index=sig)
     panel["week"] = panel.index.get_level_values("date").map(week_no).astype(int)
