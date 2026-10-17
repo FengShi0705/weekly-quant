@@ -38,7 +38,7 @@ numeric features that the ML model can weigh and the backtest can test.
             │ features.py  │── labels: next-week return rank (exec Monday → next Monday)
             └──────┬───────┘
                    ▼
-            ┌──────────────┐   LightGBM, walk-forward: retrain every 4 weeks on a rolling 5 years,
+            ┌──────────────┐   LightGBM, walk-forward: retrain every week on a rolling 5 years,
             │ model.py     │── blended 70/30 with a transparent momentum baseline
             └──────┬───────┘
                    ▼
@@ -100,8 +100,11 @@ model predicts. A EUR stock that rose 5% while EUR fell 5% is flat for a USD acc
   to the next Monday's close. The model predicts *relative* performance, not market direction.
 - **Walk-forward:** at each week T, train only on labels fully known before T. The test suite
   enforces this embargo.
-- **Retraining:** every 4 weeks, on a rolling 260-week window, with at least 156 weeks of
-  history before the first prediction.
+- **Retraining:** every week, on a rolling 260-week window, with at least 156 weeks of
+  history before the first prediction. The backtest and the live run retrain on the same schedule, so
+  the backtest simulates exactly what is traded (a test checks the two scores match).
+- **Score history:** the live run saves each week's scores and reuses them for the 4-week average, so
+  it averages the scores you actually traded on.
 - **Seed ensemble:** five LightGBM models trained with different random seeds, predictions averaged.
   A single seed's luck moved backtest CAGR by up to 5 points (see §13).
 - **Score smoothing:** each stock's traded score is the average of its last 4 weekly scores. Raw
