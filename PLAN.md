@@ -217,14 +217,14 @@ weeks, score smoothing 1 or 4 weeks, hold band 45/90/150. The best tuning-period
 1-week labels, 4-week smoothing and a top-150 hold band. All 12 combinations beat the benchmark's
 CAGR on the holdout, so the result does not depend on one lucky setting.
 
-### Results with the chosen settings (5-seed ensemble)
+### Results with the chosen settings (5-seed ensemble, weekly retraining)
 
 **Lump sum: £10,000 invested once in January 2016**
 
 | | Final value | CAGR | Volatility | Sharpe | Max drawdown |
 |---|---|---|---|---|---|
-| **Strategy (70% ML + 30% momentum)** | **£127,171** | **26.6%** | 20.6% | **1.25** | −26.5% |
-| ML only | £109,143 | 24.8% | 20.8% | 1.17 | −25.0% |
+| **Strategy (70% ML + 30% momentum)** | **£105,545** | **24.4%** | 20.2% | **1.18** | −24.7% |
+| ML only | £135,845 | 27.4% | 20.8% | 1.27 | −25.7% |
 | Momentum rule only | £40,989 | 14.0% | 15.9% | 0.90 | −23.2% |
 | Buy & hold Vanguard S&P 500 (VUSA) | £51,916 | 16.5% | 15.3% | 1.08 | −25.1% |
 | Buy & hold Vanguard FTSE All-World (VWRL) | £40,638 | 13.9% | 13.9% | 1.01 | −24.6% |
@@ -234,66 +234,73 @@ CAGR on the holdout, so the result does not depend on one lucky setting.
 
 | Invested into | Final value | Money-weighted return (XIRR) |
 |---|---|---|
-| **Strategy** | **£287,349** | **25.8%** |
+| **Strategy** | **£234,329** | **22.4%** |
 | Vanguard S&P 500 | £155,767 | 15.4% |
 | Vanguard FTSE All-World | £135,089 | 13.0% |
 
 ![Monthly investing](docs/backtest_dca.png)
 
-Weekly turnover 5.9%, costs 0.9% of the account a year, about 22 stock swaps a year. The strategy beat
-VWRL in 10 of 11 calendar years (it lagged in 2022) and the equal-weight universe in 8 of 11. Profits
-came from 121 different stocks; the top 10 made 51% of the total (NVIDIA, Rolls-Royce, Tesla, BBVA and
-UniCredit were the largest).
+Weekly turnover 5.2%, costs 0.8% of the account a year, about 20 stock swaps a year. The strategy beat
+VWRL in 9 of 11 calendar years (it lagged in 2022 and in 2026 to date) and the equal-weight universe in
+8 of 11. Profits came from 123 different stocks; the top 10 made 52% of the total (NVIDIA, UniCredit,
+Rolls-Royce, ASM International and AMD were the largest).
 
-### Tuning period vs holdout, and why the blend rather than ML only
+### Tuning period vs holdout
 
 | | Tuning, Jan 2016 – Jun 2024: CAGR / Sharpe | **Holdout, Jul 2024 – Oct 2026: CAGR / Sharpe** |
 |---|---|---|
-| **Strategy (blend)** | 25.8% / 1.26 | **29.7% / 1.22** |
-| ML only | 28.2% / 1.30 | 12.8% / 0.67 |
+| **Strategy (blend)** | 25.0% / 1.24 | **22.3% / 1.00** |
+| ML only | 29.7% / 1.38 | 19.0% / 0.90 |
 | Momentum rule only | 14.7% / 0.93 | 11.2% / 0.79 |
 | Buy & hold VWRL | 13.3% / 0.95 | 16.1% / 1.23 |
 | Buy & hold VUSA | 16.7% / 1.07 | 15.7% / 1.12 |
 | Equal-weight universe | 18.5% / 1.20 | 14.1% / 1.17 |
 
-The 70/30 weight was set before any real-data result and never tuned. ML only looked better in the
-tuning period but fell to 12.8% in the holdout, while the blend held up. The momentum rule steadied
-the strategy through a weak stretch for the ML signal. This comparison uses the holdout, so the
-holdout can no longer be used to tune the weight. The weight stays at 70/30, and paper trading is the
-next independent test. In the holdout the strategy's risk-adjusted return (Sharpe 1.22) was about the
-same as the global index fund's (1.23): it earned more by taking more risk.
+The 70/30 weight was set before any real-data result. ML only looked better in the tuning period and
+worse in the holdout, in both versions of the backtest (§14). In the holdout the strategy earned more
+than the index funds but with a lower Sharpe (1.00 against 1.23 for VWRL): it took more risk for it.
+The holdout has now been viewed several times, so paper trading is the next independent test.
 
-### Seed sensitivity and the ensemble
+### How much the numbers move with implementation details
 
-Training the same settings with four different random seeds gave 28.2%, 23.4%, 24.1% and 24.8% CAGR
-(holdout 27.6%, 20.2%, 23.2%, 17.5%). With 15 positions, one different early pick changes every later
-trade. The live model therefore averages five seeds. **Treat a single backtest figure as ±3 points.**
-Same-seed reruns are identical. An earlier 25.3% → 27.6% shift came from Yahoo revising its data
-between two downloads.
+The same strategy, implemented slightly differently:
+
+| Version | Full-period CAGR | Sharpe | Holdout CAGR |
+|---|---|---|---|
+| Single model (seed 0), retrained every 4 weeks | 28.2% | 1.32 | 27.6% |
+| Single model (seeds 1–3), retrained every 4 weeks | 23.4–24.8% | 1.17–1.23 | 17.5–23.2% |
+| 5-seed ensemble, retrained every 4 weeks | 26.6% | 1.25 | 29.7% |
+| **5-seed ensemble, retrained weekly (current)** | **24.4%** | **1.18** | **22.3%** |
+
+The model's skill barely changes across these (weekly IC 0.021–0.022). The portfolio results move
+because, with 15 positions, one different borderline pick changes every later trade. **Treat any single
+backtest figure as about ±3 points over the full period and ±6 points over the holdout.** Same-seed
+reruns are identical; an earlier 25.3% → 27.6% shift came from Yahoo revising its data between two
+downloads. The live run and the backtest now retrain on the same weekly schedule, and a test checks that
+they produce identical scores.
 
 ### Sector cap test
 
 A cap of 4 stocks per sector cut CAGR from 25.3% to 22.2% over the full period, and from 26.9% to
-18.9% in the holdout (Sharpe 0.96), in a single-seed run. Drawdowns didn't improve. The cap is
-available but off by default. Today's universe includes the semiconductor winners *because* they won,
-so the backtest likely overstates the value of concentrating in them.
+18.9% in the holdout (Sharpe 0.96), in a single-seed run with 4-week retraining. Drawdowns didn't
+improve. The cap is available but off by default. Today's universe includes the semiconductor winners
+*because* they won, so the backtest likely overstates the value of concentrating in them.
 
 ### How to read these numbers
 
 - **Survivorship bias inflates the strategy, not the index funds.** The strategy picks from today's
   large caps. VWRL and VUSA are real funds you could have bought in 2016. The fair stock-picking
-  measure is the excess over the equal-weight universe (~9 pts a year), and even that is probably
+  measure is the excess over the equal-weight universe (~7 pts a year), and even that is probably
   optimistic.
 - **The edge is modest and volatile.** Weekly IC is ~0.02, and the model ranks stocks better than
-  chance in only 55% of weeks (the portfolio itself is up in 60% of weeks). The strategy is also more
-  volatile than an index fund (20.6% vs 13.9%), with similar worst drawdowns.
+  chance in only ~56% of weeks. The strategy is also more volatile than an index fund (20.2% vs 13.9%),
+  with similar worst drawdowns.
 - **Next step:** paper trade for 8–12 weeks (Phase 2). Compare live weekly IC and turnover with the
   backtest before committing the 10k.
 
 ## 14. Phase 1b: testing the weights and other strategy variants (October 2026)
 
-**Rules set before running** (`research/phase1b_variants.py`, full results in
-`docs/phase1b_variants.csv`):
+**Rules set before running** (`research/phase1b_variants.py`):
 
 1. Choose only on Jan 2016 – Jun 2024. The Jul 2024 – Oct 2026 holdout had already been viewed, so it
    is reported but not used to choose.
@@ -305,38 +312,48 @@ so the backtest likely overstates the value of concentrating in them.
 × equal or inverse-volatility weights), plus 3 model variants (trees with residual and within-sector
 momentum; linear model; linear with the extra features).
 
-**Result: no variant passed. The strategy is unchanged.**
+The search ran twice: first with the model retrained every 4 weeks
+(`docs/phase1b_variants_4wk_retrain.csv`), then again after switching to weekly retraining
+(`docs/phase1b_variants.csv`).
 
-| ML weight (average over settings) | Selection-period Sharpe | Holdout Sharpe |
+**Results with weekly retraining**
+
+| Variant | Selection CAGR / Sharpe | Sub-period Sharpes | Holdout CAGR / Sharpe | Rule: weekly / 4-week run |
+|---|---|---|---|---|
+| **Current: 70% ML, 15 stocks, equal, trees** | 25.0% / 1.24 | 1.16 / 1.75 / 0.70 | 22.3% / 1.00 | — |
+| ML only, 10 stocks, equal | 35.9% / 1.47 | 1.29 / 1.94 / 1.14 | 20.8% / 0.95 | passes / failed |
+| ML only, 10 stocks, inverse-vol | 31.0% / 1.41 | 1.28 / 1.86 / 1.04 | 19.6% / 0.95 | passes / failed |
+| ML only, 15 stocks | 29.0% / 1.35 | 1.30 / 1.73 / 0.96 | 17.0% / 0.84 | fails / failed |
+| 50% ML, 15 stocks | 24.4% / 1.29 | 1.10 / 1.69 / 1.00 | 25.9% / 1.17 | fails / failed |
+| Trees + residual/sector momentum | 27.6% / 1.36 | 1.22 / 1.88 / 0.91 | 20.6% / 0.94 | passes / failed |
+| Linear model | 21.8% / 1.07 | 0.73 / 1.39 / 1.04 | 33.9% / 1.42 | fails / failed |
+| Linear + residual/sector momentum | 23.1% / 1.12 | 0.77 / 1.71 / 0.79 | 31.3% / 1.29 | fails / failed |
+
+| ML weight (average over settings) | Selection Sharpe: weekly / 4-week run | Holdout Sharpe: weekly / 4-week run |
 |---|---|---|
-| 0% (momentum only) | 0.95 | 0.81 |
-| 30% | 1.14 | 1.07 |
-| 50% | 1.21 | 1.21 |
-| **70% (current)** | 1.19 | 1.17 |
-| 100% (ML only) | 1.27 | 0.98 |
+| 0% (momentum only) | 0.95 / 0.95 | 0.81 / 0.81 |
+| 30% | 1.19 / 1.14 | 1.12 / 1.07 |
+| 50% | 1.19 / 1.21 | 1.14 / 1.21 |
+| **70% (current)** | 1.19 / 1.19 | 0.96 / 1.17 |
+| 100% (ML only) | 1.29 / 1.26 | 1.02 / 0.98 |
 
-| Variant | Selection CAGR / Sharpe | Sub-period Sharpes | Holdout CAGR / Sharpe |
-|---|---|---|---|
-| **Current: 70% ML, 15 stocks, equal, trees** | 25.8% / 1.26 | 1.19 / 1.60 / 0.94 | 29.7% / 1.22 |
-| ML only, 10 stocks (best selection Sharpe) | 33.7% / 1.38 | 1.48 / 1.49 / 1.14 | 17.9% / 0.87 |
-| ML only, 15 stocks | 28.8% / 1.33 | 1.41 / 1.52 / 1.03 | 17.2% / 0.89 |
-| 50% ML, 10 stocks | 28.8% / 1.31 | 1.16 / 1.70 / 1.00 | 29.0% / 1.20 |
-| Trees + residual/sector momentum | 25.9% / 1.27 | 1.07 / 1.81 / 0.82 | 21.9% / 1.00 |
-| Linear model | 24.2% / 1.16 | 0.74 / 1.70 / 0.96 | 27.3% / 1.22 |
-| Linear + residual/sector momentum | 23.2% / 1.12 | 0.83 / 1.61 / 0.83 | 28.4% / 1.24 |
+**Assessment**
 
-**What we learned**
+- **Three variants pass the rule with weekly retraining, and none did with 4-week retraining.** Whether a
+  variant passes depends on a minor implementation detail, which means the rule is mostly sorting noise.
+- **None of the passing variants improves the holdout.** ML only with 10 stocks: 20.8% / 0.95. Trees +
+  residual/sector momentum: 20.6% / 0.94. Current: 22.3% / 1.00.
+- **The signals themselves are indistinguishable.** Weekly IC is 0.023 for ML only and 0.022 for the
+  blend. Portfolio-level differences come mainly from which borderline stocks a 10–15 stock portfolio
+  happens to hold.
+- **ML only is consistently best in the selection period and weaker in the holdout**, in both runs.
+- **Momentum only is clearly worse** (Sharpe 0.95), so the ML model adds value. **10–25 stocks and
+  equal vs inverse-volatility weights make little difference.** The trees beat a linear model in the
+  selection period in both runs.
 
-- **The 50–70% ML blend is the robust region.** ML only is best in the selection period and worst in
-  the holdout. Picking it from the backtest would have cut holdout returns from ~30% to ~18% a year.
-- **10–15 stocks beat 20–25** on both return and Sharpe. **Inverse-volatility sizing did not help**
-  (average Sharpe 1.13 against 1.17 for equal weights).
-- **The trees beat a linear model** in the selection period (1.26 against 1.16), so they add value.
-- **The residual and within-sector momentum features added nothing robust.**
-- **The current settings sit on a plateau.** Neighbouring settings score 1.25–1.31, so the result
-  isn't a lucky spike. A Sharpe ratio estimated over 8.5 years has a standard error of about ±0.45,
-  and the best of 44 variants would beat the current one by ~0.1 from chance alone. Differences of
-  this size can't be told apart from noise.
+**Decision: open.** The rule technically picks ML only with 10 stocks, but the evidence above says the
+backtest cannot tell these variants apart. Recommended: keep the current strategy, and paper trade the
+rule's pick alongside it, so live data decides.
 
 **Implication for the roadmap.** More tuning of the same 15 price and volume features is unlikely to
 help. Improvements should come from **new information**: point-in-time fundamentals and earnings
