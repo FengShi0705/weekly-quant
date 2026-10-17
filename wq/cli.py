@@ -4,7 +4,7 @@ import json
 import numpy as np
 import pandas as pd
 
-from . import backtest, weekly
+from . import backtest, paper, weekly
 from .config import load_config
 from .data import download, load_benchmarks, load_cached, load_universe
 
@@ -143,6 +143,12 @@ def main(argv=None):
     sub.add_parser("backtest", help="run the walk-forward backtest on cached data")
     w = sub.add_parser("weekly", help="score the latest week and write this week's order sheet")
     w.add_argument("--no-download", action="store_true", help="use cached data instead of refreshing")
+    pp = sub.add_parser("paper", help="advance every paper-trading strategy by one week")
+    pp.add_argument("--no-download", action="store_true", help="use cached data instead of refreshing")
+    pp.add_argument("--spec", default="paper/strategies.yaml")
+    tp = sub.add_parser("t212", help="mirror the paper strategy's orders in a Trading 212 Practice account")
+    tp.add_argument("--execute", action="store_true", help="send the orders (default: dry run)")
+    tp.add_argument("--spec", default="paper/strategies.yaml")
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
 
@@ -155,3 +161,14 @@ def main(argv=None):
             download(cfg)
         close, volume, fx = load_cached(cfg)
         weekly.run(cfg, close, volume, fx, load_universe(cfg))
+    elif args.cmd == "paper":
+        if not args.no_download:
+            download(cfg)
+        close, volume, fx = load_cached(cfg)
+        paper.run(cfg, close, volume, fx, load_universe(cfg), cfg["_root"] / args.spec)
+    elif args.cmd == "t212":
+        from . import t212
+        client = t212.Client()
+        spec = cfg["_root"] / args.spec
+        t212.sync(client, spec)
+        t212.place(client, spec, load_universe(cfg), execute=args.execute)

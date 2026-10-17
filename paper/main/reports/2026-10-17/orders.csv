@@ -1,0 +1,16 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+BUY,AMAT,Applied Materials,US,2.1187,409.29,USD,653.32,1.63,enter
+BUY,AMD,Advanced Micro Devices,US,1.64,528.75,USD,653.31,1.63,enter
+BUY,BARC.L,Barclays,UK,151.0073,432.65,GBp,653.33,3.92,enter
+BUY,BAYN.DE,Bayer,DE,17.3945,44.46,EUR,653.33,1.63,enter
+BUY,BBVA.MC,BBVA,ES,33.3632,23.18,EUR,653.33,2.94,enter
+BUY,BNP.PA,BNP Paribas,FR,8.636,89.55,EUR,653.33,3.59,enter
+BUY,IFX.DE,Infineon,DE,14.7615,52.39,EUR,653.33,1.63,enter
+BUY,INGA.AS,ING Group,NL,25.7272,30.06,EUR,653.33,1.63,enter
+BUY,LRCX,Lam Research,US,3.2855,263.94,USD,653.33,1.63,enter
+BUY,MU,Micron Technology,US,0.9867,878.84,USD,653.31,1.63,enter
+BUY,PANW,Palo Alto Networks,US,2.5356,342.0,USD,653.33,1.63,enter
+BUY,RR.L,Rolls-Royce,UK,48.3735,1350.6,GBp,653.33,3.92,enter
+BUY,STAN.L,Standard Chartered,UK,30.7161,2127.0,GBp,653.33,3.92,enter
+BUY,TXN,Texas Instruments,US,3.1365,276.48,USD,653.33,1.63,enter
+BUY,UBSG.SW,UBS Group,CH,18.0221,39.63,CHF,653.33,1.63,enter

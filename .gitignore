@@ -2,6 +2,6 @@
 __pycache__/
 *.pyc
 data/cache/
-reports/
-holdings.csv
+/reports/
+/holdings.csv
 .pytest_cache/

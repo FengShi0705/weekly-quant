@@ -57,8 +57,19 @@ def recent_raw_scores(panel, cfg, dates):
 
 
 def run(cfg, close_local, volume, fx_usd, universe):
+    """CLI entry: plan this week from holdings.csv and write the order sheet."""
+    shares, cash = read_holdings(cfg["paths"]["holdings"], cfg["account"]["capital"])
+    return plan(cfg, close_local, volume, fx_usd, universe, shares, cash)["out"]
+
+
+def plan(cfg, close_local, volume, fx_usd, universe, shares, cash, prepared=None):
+    """Score the latest week and turn the given holdings into this week's orders.
+
+    Writes orders.csv, target_portfolio.csv, all_scores.csv and report.md under paths.reports/<today>.
+    Returns a dict with the signal date, orders (as generate_orders gives them), tables and output dir.
+    """
     base = cfg["account"]["base_currency"]
-    panel, cal, px = prepare(cfg, close_local, volume, fx_usd, universe)
+    panel, cal, px = prepared or prepare(cfg, close_local, volume, fx_usd, universe)
     dates = panel.index.get_level_values("date").unique().sort_values()
     T = dates[-1]
     k = cfg["model"]["score_smoothing_weeks"]
@@ -68,7 +79,6 @@ def run(cfg, close_local, volume, fx_usd, universe):
         print(f"  reused saved scores for {', '.join(str(d.date()) for d in reused)}")
     scores = smooth_scores(raw, k).xs(T, level="date")
 
-    shares, cash = read_holdings(cfg["paths"]["holdings"], cfg["account"]["capital"])
     unmanaged = {t: q for t, q in shares.items() if t not in universe.index}
     shares = {t: q for t, q in shares.items() if t in universe.index}
     price = px.ffill().loc[T]
@@ -115,7 +125,8 @@ def run(cfg, close_local, volume, fx_usd, universe):
     print(f"\nEquity {equity:,.2f} {base} | exposure {expo:.0%} | {len(order_df)} orders")
     print(order_df.to_string(index=False) if len(order_df) else "No trades needed this week.")
     print(f"\nWritten to {out}/")
-    return out
+    return {"signal_date": T, "orders": orders, "order_df": order_df, "targets": target_df,
+            "equity": equity, "out": out}
 
 
 def _report(T, base, equity, cash, expo, targets, orders, unmanaged, importance, cfg):

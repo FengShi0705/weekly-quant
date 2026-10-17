@@ -1,0 +1,11 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+BUY,AMAT,Applied Materials,US,3.1781,409.29,USD,980.0,2.45,enter
+BUY,AMD,Advanced Micro Devices,US,2.46,528.75,USD,979.97,2.45,enter
+BUY,BAYN.DE,Bayer,DE,26.0917,44.46,EUR,980.0,2.45,enter
+BUY,GLE.PA,Societe Generale,FR,17.9934,64.47,EUR,980.0,5.39,enter
+BUY,IFX.DE,Infineon,DE,22.1423,52.39,EUR,980.0,2.45,enter
+BUY,KER.PA,Kering,FR,5.347,216.95,EUR,979.99,5.39,enter
+BUY,LRCX,Lam Research,US,4.9282,263.94,USD,979.98,2.45,enter
+BUY,MU,Micron Technology,US,1.48,878.84,USD,979.93,2.45,enter
+BUY,ODFL,Old Dominion Freight,US,6.9293,187.72,USD,980.0,2.45,enter
+BUY,TXN,Texas Instruments,US,4.7047,276.48,USD,979.99,2.45,enter

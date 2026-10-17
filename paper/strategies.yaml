@@ -1,0 +1,8 @@
+# Strategies paper traded side by side from 17 Oct 2026. Each entry overrides config.yaml.
+start_capital: 10000
+t212_practice: main      # mirror this strategy's orders in the Trading 212 Practice account
+strategies:
+  main: {}                  # 70% ML + 30% momentum, 15 stocks: config.yaml as it is
+  ml_only_10:               # the Phase 1b rule's pick (PLAN.md §14)
+    model: {ml_weight: 1.0}
+    portfolio: {n_positions: 10}
