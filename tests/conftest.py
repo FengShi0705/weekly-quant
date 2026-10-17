@@ -36,6 +36,7 @@ def make_market(n=60, start="2011-01-03", end="2019-12-31", drift_dispersion=0.0
 def cfg():
     c = copy.deepcopy(load_config("config.yaml"))
     c["model"]["lgbm"]["n_estimators"] = 60
+    c["model"]["n_seeds"] = 1
     c["model"]["retrain_every_weeks"] = 8
     c["backtest"]["start"] = "2015-06-01"
     c["universe"]["regions"] = ["US", "UK", "EU"]

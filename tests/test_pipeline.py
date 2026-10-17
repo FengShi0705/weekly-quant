@@ -95,3 +95,18 @@ def test_score_smoothing_uses_only_past_weeks():
     future_changed = s.copy()
     future_changed.iloc[-2:] = 999
     pd.testing.assert_frame_equal(smooth_scores(future_changed, 3).iloc[:-2], out.iloc[:-2])
+
+
+def test_seed_ensemble_averages_member_predictions(cfg, signal_market):
+    from wq.model import fit, predict
+
+    close, volume, fx, universe = signal_market
+    panel, _, _ = prepare(cfg, close, volume, fx, universe)
+    train = panel[panel["label"].notna()].iloc[:5000]
+    cfg["model"]["n_seeds"] = 3
+    models = fit(train, cfg)
+    assert len(models) == 3
+    X = panel.iloc[5000:5100]
+    members = np.array([m.predict(X[FEATURES]) for m in models])
+    assert not np.allclose(members[0], members[1])
+    np.testing.assert_allclose(predict(models, X), members.mean(axis=0))

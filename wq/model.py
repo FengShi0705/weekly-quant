@@ -24,12 +24,23 @@ def train_slice(panel, pred_week, cfg):
 
 
 def fit(train, cfg, seed=0):
+    """Train an ensemble of n_seeds LightGBM models that differ only in their random seed.
+
+    With 15 positions, one model's random choices can change a pick and every trade after it;
+    averaging several seeds keeps that luck out of the portfolio.
+    """
     import lightgbm as lgb
 
     params = dict(cfg["model"]["lgbm"])
     rounds = params.pop("n_estimators")
-    params.update(objective="regression", seed=seed, deterministic=True, num_threads=0)
-    return lgb.train(params, lgb.Dataset(train[FEATURES], train["label"]), num_boost_round=rounds)
+    params.update(objective="regression", deterministic=True, num_threads=0)
+    data = lgb.Dataset(train[FEATURES], train["label"], free_raw_data=False)
+    return [lgb.train({**params, "seed": seed + i}, data, num_boost_round=rounds)
+            for i in range(cfg["model"]["n_seeds"])]
+
+
+def predict(models, X):
+    return np.mean([m.predict(X[FEATURES]) for m in models], axis=0)
 
 
 def _rank(s):
@@ -59,7 +70,7 @@ def walk_forward(panel, cfg, pred_dates, retrain_every=None, verbose=True, retur
                     print(f"  fit {T.date()}: {len(train):,} rows, {train['week'].nunique()} weeks")
         X = panel.xs(T, level="date", drop_level=False)
         base = baseline_score(X)
-        ml = pd.Series(model.predict(X[FEATURES]), index=X.index) if model is not None else pd.Series(np.nan, index=X.index)
+        ml = pd.Series(predict(model, X) if model is not None else np.nan, index=X.index)
         score = _rank(base) if model is None else w_ml * _rank(ml) + (1 - w_ml) * _rank(base)
         out.append(pd.DataFrame({"ml": ml, "baseline": base, "score": score}))
     scores = pd.concat(out) if out else pd.DataFrame(columns=["ml", "baseline", "score"])
@@ -86,5 +97,6 @@ def information_coefficients(scores, panel):
     return pd.DataFrame.from_dict(rows, orient="index")
 
 
-def feature_importance(model):
-    return pd.Series(model.feature_importance("gain"), index=FEATURES).sort_values(ascending=False)
+def feature_importance(models):
+    gain = np.mean([m.feature_importance("gain") for m in models], axis=0)
+    return pd.Series(gain, index=FEATURES).sort_values(ascending=False)
