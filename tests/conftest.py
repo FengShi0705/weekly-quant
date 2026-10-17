@@ -33,8 +33,9 @@ def make_market(n=60, start="2011-01-03", end="2019-12-31", drift_dispersion=0.0
 
 
 @pytest.fixture
-def cfg():
+def cfg(tmp_path):
     c = copy.deepcopy(load_config("config.yaml"))
+    c["paths"]["score_history"] = tmp_path / "history" / "raw_scores.csv"
     c["model"]["lgbm"]["n_estimators"] = 60
     c["model"]["n_seeds"] = 1
     c["model"]["retrain_every_weeks"] = 8

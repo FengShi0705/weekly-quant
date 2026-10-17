@@ -13,4 +13,5 @@ def load_config(path="config.yaml"):
     cfg["data"]["cache_dir"] = root / cfg["data"]["cache_dir"]
     cfg["paths"]["reports"] = root / cfg["paths"]["reports"]
     cfg["paths"]["holdings"] = root / cfg["paths"]["holdings"]
+    cfg["paths"]["score_history"] = root / cfg["paths"]["score_history"]
     return cfg

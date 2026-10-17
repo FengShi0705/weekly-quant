@@ -1,4 +1,6 @@
 """Live weekly run: score the latest week and write an order sheet for manual execution."""
+import hashlib
+import json
 from datetime import date
 
 import pandas as pd
@@ -24,6 +26,36 @@ def read_holdings(path, capital):
     return shares, cash
 
 
+def model_fingerprint(cfg):
+    """Short hash of the model settings; saved scores are only reused under the same settings."""
+    return hashlib.sha1(json.dumps(cfg["model"], sort_keys=True, default=str).encode()).hexdigest()[:12]
+
+
+def recent_raw_scores(panel, cfg, dates):
+    """Unsmoothed scores for `dates` (oldest first, newest last).
+
+    Earlier weeks come from the score history, so the 4-week average uses the scores you actually
+    traded on. Missing weeks, and always the newest week, are scored by walk_forward exactly as the
+    backtest scores them. Returns (scores, model fitted for the newest week, weeks reused).
+    """
+    path, fp = cfg["paths"]["score_history"], model_fingerprint(cfg)
+    history = pd.read_csv(path, parse_dates=["date"]) if path.exists() else pd.DataFrame(
+        columns=["date", "ticker", "ml", "baseline", "score", "model"])
+    reuse = history[(history["model"] == fp) & history["date"].isin(dates[:-1])]
+    reused = sorted(reuse["date"].unique())
+    todo = [d for d in dates if d not in set(reused)]
+    new, model = walk_forward(panel, cfg, todo, verbose=True, return_model=True)
+
+    keep = history[~history["date"].isin(new.index.get_level_values("date").unique())]
+    path.parent.mkdir(parents=True, exist_ok=True)
+    pd.concat([keep, new.reset_index().assign(model=fp)]).sort_values(["date", "ticker"]).to_csv(path, index=False)
+
+    if not reused:
+        return new, model, reused
+    saved = reuse.set_index(["date", "ticker"])[["ml", "baseline", "score"]].astype(float)
+    return pd.concat([saved, new]).sort_index(), model, reused
+
+
 def run(cfg, close_local, volume, fx_usd, universe):
     base = cfg["account"]["base_currency"]
     panel, cal, px = prepare(cfg, close_local, volume, fx_usd, universe)
@@ -31,9 +63,10 @@ def run(cfg, close_local, volume, fx_usd, universe):
     T = dates[-1]
     k = cfg["model"]["score_smoothing_weeks"]
     print(f"Scoring signal date {T.date()} (averaged over the last {k} weeks) ...")
-    # Re-score the last k weeks, each with the model as it stood that week, as the backtest does.
-    scores, model = walk_forward(panel, cfg, list(dates[-k:]), retrain_every=1, verbose=True, return_model=True)
-    scores = smooth_scores(scores, k).xs(T, level="date")
+    raw, model, reused = recent_raw_scores(panel, cfg, list(dates[-k:]))
+    if reused:
+        print(f"  reused saved scores for {', '.join(str(d.date()) for d in reused)}")
+    scores = smooth_scores(raw, k).xs(T, level="date")
 
     shares, cash = read_holdings(cfg["paths"]["holdings"], cfg["account"]["capital"])
     unmanaged = {t: q for t, q in shares.items() if t not in universe.index}

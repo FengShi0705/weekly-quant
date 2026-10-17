@@ -124,3 +124,37 @@ def test_ridge_and_extra_features_run(cfg, signal_market):
     assert model.feature_name() == FEATURES + EXTRA_FEATURES
     pred = predict([model], panel.iloc[:50])
     assert np.isfinite(pred).all()
+
+
+def test_live_scores_match_backtest(cfg, signal_market):
+    """The live run's averaged score for the newest week equals the backtest's for that week."""
+    from wq.model import smooth_scores
+    from wq.weekly import recent_raw_scores
+
+    close, volume, fx, universe = signal_market
+    cfg["model"]["retrain_every_weeks"] = 1
+    panel, _, _ = prepare(cfg, close, volume, fx, universe)
+    dates = list(panel.index.get_level_values("date").unique().sort_values())
+    k = cfg["model"]["score_smoothing_weeks"]
+    backtest_view = smooth_scores(walk_forward(panel, cfg, dates[-10:], verbose=False), k)
+    raw, _, reused = recent_raw_scores(panel, cfg, dates[-k:])
+    live_view = smooth_scores(raw, k)
+    assert reused == []
+    pd.testing.assert_series_equal(live_view.xs(dates[-1], level="date")["score"],
+                                   backtest_view.xs(dates[-1], level="date")["score"])
+
+
+def test_score_history_is_reused_only_for_same_model_settings(cfg, signal_market):
+    from wq.weekly import recent_raw_scores
+
+    close, volume, fx, universe = signal_market
+    cfg["model"]["retrain_every_weeks"] = 1
+    panel, _, _ = prepare(cfg, close, volume, fx, universe)
+    dates = list(panel.index.get_level_values("date").unique().sort_values())
+    first, _, _ = recent_raw_scores(panel, cfg, dates[-5:-1])          # last weekend's run
+    second, _, reused = recent_raw_scores(panel, cfg, dates[-4:])      # this weekend's run
+    assert reused == dates[-4:-1]                                       # three earlier weeks came from history
+    pd.testing.assert_frame_equal(second.loc[dates[-4]:dates[-2]], first.loc[dates[-4]:dates[-2]])
+    cfg["model"]["ml_weight"] = 0.5
+    _, _, reused = recent_raw_scores(panel, cfg, dates[-4:])
+    assert reused == []                                                  # settings changed: rescore everything

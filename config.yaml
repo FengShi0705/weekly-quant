@@ -22,7 +22,7 @@ model:
   label_horizon_weeks: 1    # predict next-week return rank
   train_window_weeks: 260   # rolling 5y of history per fit
   min_train_weeks: 156      # need 3y before the first live prediction
-  retrain_every_weeks: 4
+  retrain_every_weeks: 1      # retrain on the latest data every week, in the backtest and live alike
   score_smoothing_weeks: 4  # average each stock's score over the last 4 weeks: cuts turnover ~8x
   # Blend of ML prediction and a transparent momentum baseline; 1.0 = pure ML.
   ml_weight: 0.7
@@ -83,3 +83,4 @@ benchmarks:
 paths:
   reports: reports
   holdings: holdings.csv
+  score_history: reports/history/raw_scores.csv   # each week's scores, reused for the 4-week average
