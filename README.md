@@ -20,7 +20,8 @@ Edit `config.yaml`: set `base_currency` (USD/GBP/EUR), `capital` and `broker` (`
 
 ```bash
 python -m wq download    # ~2-5 min: prices, volume, FX from Yahoo Finance into data/cache/
-python -m wq backtest    # walk-forward backtest -> reports/backtest/ (summary.json, equity.png, trades)
+python -m wq backtest    # walk-forward backtest vs buy & hold and monthly investing in index funds
+                         #   -> reports/backtest/ (summary.json, equity.png, dca.png, trades)
 python -m wq weekly      # refresh data, score this week -> reports/<date>/orders.csv + report.md
 python -m pytest         # mechanics and leak tests on synthetic data
 ```

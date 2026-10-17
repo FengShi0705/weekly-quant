@@ -78,12 +78,17 @@ def download(cfg):
     print(f"Downloading {len(tickers)} stocks from {start} ...")
     close, volume = _yf_download(tickers, start)
 
-    ccys = {quote_currency(c)[0] for c in universe["currency"]} | {cfg["account"]["base_currency"]}
+    etfs = cfg["benchmarks"]["etfs"]
+    ccys = ({quote_currency(c)[0] for c in universe["currency"]} | {cfg["account"]["base_currency"]}
+            | {quote_currency(e["currency"])[0] for e in etfs.values()})
     ccys.discard("USD")
     fx_tickers = [f"{c}USD=X" for c in sorted(ccys)]
     print(f"Downloading FX: {', '.join(fx_tickers)}")
     fx_close, _ = _yf_download(fx_tickers, start)
     fx_usd = fx_close.rename(columns=lambda t: t[:3])
+
+    print(f"Downloading benchmark ETFs: {', '.join(etfs)}")
+    etf_close, _ = _yf_download(list(etfs), start)
 
     missing = sorted(set(tickers) - set(close.columns))
     cache = cfg["data"]["cache_dir"]
@@ -91,6 +96,7 @@ def download(cfg):
     clean_spikes(close).to_parquet(cache / "close_local.parquet")
     volume.to_parquet(cache / "volume.parquet")
     fx_usd.to_parquet(cache / "fx_usd.parquet")
+    clean_spikes(etf_close).to_parquet(cache / "etf_close.parquet")
     meta = {"downloaded_at": datetime.now(timezone.utc).isoformat(), "last_date": str(close.index.max().date()),
             "n_stocks": close.shape[1], "missing": missing}
     (cache / "meta.json").write_text(json.dumps(meta, indent=2))
@@ -106,6 +112,17 @@ def load_cached(cfg):
     volume = pd.read_parquet(cache / "volume.parquet")
     fx_usd = pd.read_parquet(cache / "fx_usd.parquet")
     return close, volume, fx_usd
+
+
+def load_benchmarks(cfg, fx_usd):
+    """Benchmark ETF prices in base currency, or None if they haven't been downloaded."""
+    path = cfg["data"]["cache_dir"] / "etf_close.parquet"
+    if not path.exists():
+        return None
+    etfs = cfg["benchmarks"]["etfs"]
+    close = pd.read_parquet(path)
+    return to_base(close, {t: etfs[t]["currency"] for t in close.columns if t in etfs}, fx_usd,
+                   cfg["account"]["base_currency"])
 
 
 def to_base(close_local, currency_by_ticker, fx_usd, base):

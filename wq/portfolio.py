@@ -70,9 +70,14 @@ def select_targets(scores, held, meta, price, equity, cfg, exposure=1.0):
     return {t: weight for t in selected}
 
 
-def generate_orders(shares, targets, price, equity, meta, cfg):
-    """shares: dict ticker -> current quantity. Returns a list of order dicts (sells first)."""
+def generate_orders(shares, targets, price, equity, meta, cfg, cash=0.0):
+    """shares: dict ticker -> current quantity. Returns a list of order dicts (sells first).
+
+    Kept positions are only resized past the drift band, except that underweight ones are topped
+    up when idle cash (new deposits, dividends) exceeds max_idle_cash of equity.
+    """
     p = cfg["portfolio"]
+    idle = equity > 0 and cash / equity > p["max_idle_cash"]
     orders = []
     for t in sorted(set(shares) | set(targets)):
         cur = shares.get(t, 0.0)
@@ -85,7 +90,8 @@ def generate_orders(shares, targets, price, equity, meta, cfg):
                 orders.append({"ticker": t, "side": "sell", "shares": cur, "value": cur_val, "reason": "exit"})
             continue
         tgt_val = targets[t] * equity
-        if cur > 0 and abs(cur_val - tgt_val) <= p["rebalance_drift"] * tgt_val:
+        in_band = abs(cur_val - tgt_val) <= p["rebalance_drift"] * tgt_val
+        if cur > 0 and in_band and not (idle and tgt_val > cur_val):
             continue
         whole = _whole_units(meta, t, cfg)
         qty = quantize((tgt_val - cur_val) / px, int(meta.loc[t, "lot_size"]), whole)

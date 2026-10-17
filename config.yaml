@@ -45,6 +45,7 @@ portfolio:
   cash_buffer: 0.02         # keep 2% cash for fees and FX
   min_trade_value: 75       # skip trades smaller than this (base currency)
   rebalance_drift: 0.30     # only resize a kept position if it drifted >30% from target
+  max_idle_cash: 0.05       # above 5% idle cash (deposits, dividends), top up underweight holdings
   regime_filter: false      # halve exposure below the 40-week average; cost ~3%/yr in backtest (whipsaw)
   regime_exposure: 0.5
 
@@ -66,7 +67,13 @@ costs:
 
 backtest:
   start: "2016-01-01"
-  benchmark: equal_weight   # equal-weight of the same tradable universe
+
+benchmarks:
+  # Real index funds you could have bought instead (London-listed, priced in GBP, on T212 and IBKR).
+  etfs:
+    VWRL.L: {name: "Vanguard FTSE All-World", currency: GBP}
+    VUSA.L: {name: "Vanguard S&P 500", currency: GBP}
+  dca_monthly: 500          # monthly fixed-amount investing: deposit this in the first trading week of each month
 
 paths:
   reports: reports
