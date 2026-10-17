@@ -1,4 +1,5 @@
 import numpy as np
+import pytest
 import pandas as pd
 
 from wq import backtest
@@ -79,3 +80,18 @@ def test_weekly_run_writes_order_sheet(cfg, signal_market, tmp_path):
     assert len(targets) == cfg["portfolio"]["n_positions"]
     assert set(orders["side"]) <= {"BUY", "SELL"}
     assert "NOT_IN_UNIVERSE" in (out / "report.md").read_text()
+
+
+def test_score_smoothing_uses_only_past_weeks():
+    from wq.model import smooth_scores
+
+    idx = pd.MultiIndex.from_product([pd.date_range("2020-01-03", periods=6, freq="W-FRI"), ["A", "B"]],
+                                     names=["date", "ticker"])
+    s = pd.DataFrame({"score": np.arange(12, dtype=float)}, index=idx)
+    out = smooth_scores(s, 3)
+    a = s.xs("A", level="ticker")["score"].to_numpy()
+    assert out.xs("A", level="ticker")["score"].iloc[0] == a[0]
+    assert out.xs("A", level="ticker")["score"].iloc[4] == pytest.approx(a[2:5].mean())
+    future_changed = s.copy()
+    future_changed.iloc[-2:] = 999
+    pd.testing.assert_frame_equal(smooth_scores(future_changed, 3).iloc[:-2], out.iloc[:-2])

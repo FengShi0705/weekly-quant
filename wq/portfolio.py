@@ -47,14 +47,16 @@ def select_targets(scores, held, meta, price, equity, cfg, exposure=1.0):
             return True
         return price[t] * int(meta.loc[t, "lot_size"]) <= pos_value
 
-    selected, per_country = [], {}
+    selected, counts = [], {}
+    caps = {"country": p["max_per_country"], "sector": p["max_per_sector"]}
 
     def add(t):
-        c = meta.loc[t, "country"]
-        if per_country.get(c, 0) >= p["max_per_country"]:
+        keys = [(col, meta.loc[t, col]) for col in caps]
+        if any(counts.get(k, 0) >= caps[k[0]] for k in keys):
             return
         selected.append(t)
-        per_country[c] = per_country.get(c, 0) + 1
+        for k in keys:
+            counts[k] = counts.get(k, 0) + 1
 
     # Incumbents get a wider band (hold_rank) than newcomers (n_positions) to cut turnover.
     for t in sorted((t for t in held if t in rank.index and rank[t] <= p["hold_rank"]), key=rank.get):

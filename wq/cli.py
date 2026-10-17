@@ -1,6 +1,7 @@
 import argparse
 import json
 
+import numpy as np
 import pandas as pd
 
 from . import backtest, weekly
@@ -27,14 +28,22 @@ def _plot(out, results, bench):
         label, color = SERIES.get(k, BENCH)
         style = "--" if k == "bench" else "-"
         ax.plot(eq.index, eq.values, style, color=color, lw=2, label=label)
-        ax.annotate(f"{label}  {eq.iloc[-1]:.2f}x", (eq.index[-1], eq.iloc[-1]), xytext=(6, 0),
-                    textcoords="offset points", va="center", fontsize=9, color=INK_2)
     lo, hi = min(c.min() for c in curves.values()), max(c.max() for c in curves.values())
-    if hi / lo > 3:  # log scale only when compounding makes linear unreadable
+    log = hi / lo > 3  # log scale only when compounding makes linear unreadable
+    if log:
         ax.set_yscale("log")
         ax.yaxis.set_major_locator(matplotlib.ticker.LogLocator(base=10, subs=(1, 2, 3, 5)))
         ax.yaxis.set_minor_formatter(matplotlib.ticker.NullFormatter())
     ax.yaxis.set_major_formatter(matplotlib.ticker.FuncFormatter(lambda y, _: f"{y:g}x"))
+
+    # End labels, pushed apart so lines that finish close together stay readable.
+    fwd, inv = (np.log10, lambda v: 10 ** v) if log else ((lambda v: v), (lambda v: v))
+    y0, y1 = ax.get_ylim()
+    gap, prev = 0.045 * (fwd(y1) - fwd(y0)), -np.inf
+    for k, eq in sorted(curves.items(), key=lambda kv: kv[1].iloc[-1]):
+        prev = max(fwd(eq.iloc[-1]), prev + gap)
+        ax.text(eq.index[-1] + pd.Timedelta(days=30), inv(prev), f"{SERIES.get(k, BENCH)[0]}  {eq.iloc[-1]:.2f}x",
+                va="center", fontsize=9, color=INK_2)
     ax.set_title("Growth of 1 (after costs, base currency)", loc="left", color=INK, fontsize=12)
     dd = curves["score"] / curves["score"].cummax() - 1
     ax_dd.fill_between(dd.index, dd.values, 0, color=SERIES["score"][1], alpha=0.25, lw=0)
@@ -54,7 +63,7 @@ def _plot(out, results, bench):
 
 
 def _fmt(summary):
-    keys = ["cagr", "ann_vol", "sharpe", "max_drawdown", "avg_weekly_turnover", "costs_pct_of_capital_per_year"]
+    keys = ["cagr", "ann_vol", "sharpe", "max_drawdown", "avg_weekly_turnover", "cost_drag_per_year"]
     rows = {k: {m: v.get(m) for m in keys} for k, v in summary.items() if k != "ic"}
     return pd.DataFrame(rows).T
 
@@ -75,6 +84,9 @@ def cmd_backtest(cfg):
     print("\n" + table.to_string(float_format=lambda x: f"{x:.3f}"))
     print("\nInformation coefficient (weekly Spearman, score vs next-week return):")
     print(pd.DataFrame(res["summary"]["ic"]).T.to_string(float_format=lambda x: f"{x:.3f}"))
+    res["by_year"].to_csv(out / "by_year.csv")
+    print("\nCalendar-year returns (strategy after costs vs equal-weight benchmark):")
+    print(res["by_year"].to_string(float_format=lambda x: f"{x:.1%}"))
     print(f"\nWritten to {out}/")
 
 

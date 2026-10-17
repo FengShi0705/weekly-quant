@@ -7,7 +7,7 @@ from .backtest import prepare
 from .costs import trade_cost
 from .data import usd_per_base
 from .features import market_index
-from .model import feature_importance, walk_forward
+from .model import feature_importance, smooth_scores, walk_forward
 from .portfolio import generate_orders, regime_exposure, select_targets
 
 
@@ -27,10 +27,13 @@ def read_holdings(path, capital):
 def run(cfg, close_local, volume, fx_usd, universe):
     base = cfg["account"]["base_currency"]
     panel, cal, px = prepare(cfg, close_local, volume, fx_usd, universe)
-    T = panel.index.get_level_values("date").max()
-    print(f"Scoring signal date {T.date()} ...")
-    scores, model = walk_forward(panel, cfg, [T], verbose=True, return_model=True)
-    scores = scores.xs(T, level="date")
+    dates = panel.index.get_level_values("date").unique().sort_values()
+    T = dates[-1]
+    k = cfg["model"]["score_smoothing_weeks"]
+    print(f"Scoring signal date {T.date()} (averaged over the last {k} weeks) ...")
+    # Re-score the last k weeks, each with the model as it stood that week, as the backtest does.
+    scores, model = walk_forward(panel, cfg, list(dates[-k:]), retrain_every=1, verbose=True, return_model=True)
+    scores = smooth_scores(scores, k).xs(T, level="date")
 
     shares, cash = read_holdings(cfg["paths"]["holdings"], cfg["account"]["capital"])
     unmanaged = {t: q for t, q in shares.items() if t not in universe.index}
@@ -63,7 +66,7 @@ def run(cfg, close_local, volume, fx_usd, universe):
     rank = scores["score"].rank(ascending=False).astype(int)
     target_df = pd.DataFrame([{
         "rank": int(rank[t]), "ticker": t, "name": universe.loc[t, "name"], "country": universe.loc[t, "country"],
-        "score": round(float(scores.loc[t, "score"]), 3), "target_weight": round(w, 4),
+        "sector": universe.loc[t, "sector"], "score": round(float(scores.loc[t, "score"]), 3), "target_weight": round(w, 4),
         "target_value_" + base: round(w * equity, 2), "held": t in shares,
     } for t, w in targets.items()]).sort_values("rank")
 
@@ -98,6 +101,9 @@ def _report(T, base, equity, cash, expo, targets, orders, unmanaged, importance,
         orders.to_markdown(index=False) if len(orders) else "_No trades needed this week._",
         "",
         "## Target portfolio",
+        "",
+        "Sector mix: " + ", ".join(f"{k} {v}" for k, v in targets["sector"].value_counts().items())
+        + f" (cap {cfg['portfolio']['max_per_sector']} per sector).",
         "",
         targets.to_markdown(index=False),
         "",

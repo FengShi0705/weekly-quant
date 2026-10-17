@@ -66,6 +66,14 @@ def walk_forward(panel, cfg, pred_dates, retrain_every=None, verbose=True, retur
     return (scores, model) if return_model else scores
 
 
+def smooth_scores(scores, weeks):
+    """Average each stock's scores over its last `weeks` signal dates (past only) to cut turnover."""
+    if weeks <= 1:
+        return scores
+    return scores.groupby(level="ticker", group_keys=False).transform(
+        lambda x: x.rolling(weeks, min_periods=1).mean())
+
+
 def information_coefficients(scores, panel):
     """Weekly Spearman correlation between each score and the next week's return."""
     df = scores.join(panel[["fwd_ret_1w"]]).dropna(subset=["fwd_ret_1w"])

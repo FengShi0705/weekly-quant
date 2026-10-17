@@ -4,7 +4,7 @@ import pandas as pd
 
 from .data import to_base, usd_per_base
 from .features import build_panel, market_index
-from .model import information_coefficients, walk_forward
+from .model import information_coefficients, smooth_scores, walk_forward
 from .portfolio import execute, generate_orders, regime_exposure, select_targets
 
 VARIANTS = ["score", "ml", "baseline"]
@@ -76,7 +76,8 @@ def run(cfg, close_local, volume, fx_usd, universe, verbose=True):
     pred_dates = [d for d in cal.index if d >= start and pd.notna(cal.loc[d, "exec_date"])]
     if verbose:
         print(f"Walk-forward over {len(pred_dates)} weeks, {panel.index.get_level_values('ticker').nunique()} stocks")
-    scores = walk_forward(panel, cfg, pred_dates, verbose=verbose)
+    scores = smooth_scores(walk_forward(panel, cfg, pred_dates, verbose=verbose),
+                           cfg["model"]["score_smoothing_weeks"])
     ic = information_coefficients(scores, panel)
 
     results, summary = {}, {"ic": ic_summary(ic)}
@@ -86,8 +87,12 @@ def run(cfg, close_local, volume, fx_usd, universe, verbose=True):
         m = metrics(res["ret"])
         m["avg_weekly_turnover"] = res["turnover"].mean()
         m["total_costs"] = res["cost"].sum()
-        m["costs_pct_of_capital_per_year"] = res["cost"].sum() / cfg["account"]["capital"] / (len(res) / 52)
+        m["cost_drag_per_year"] = (res["cost"] / res["equity"]).sum() / (len(res) / 52)
         summary[v] = m
     bench = benchmark_returns(panel, results["score"][0].index)
     summary["benchmark_equal_weight"] = metrics(bench)
-    return {"summary": summary, "results": results, "benchmark": bench, "ic": ic, "scores": scores}
+    by_year = pd.DataFrame({"strategy": results["score"][0]["ret"], "benchmark": bench}).dropna()
+    by_year = (1 + by_year).groupby(by_year.index.year).prod() - 1
+    by_year["excess"] = by_year["strategy"] - by_year["benchmark"]
+    return {"summary": summary, "results": results, "benchmark": bench, "ic": ic, "scores": scores,
+            "by_year": by_year}

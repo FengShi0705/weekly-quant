@@ -2,7 +2,7 @@
 # Every number here is an assumption you should check against your own broker statements.
 
 account:
-  base_currency: USD        # currency your account is valued in: USD, GBP or EUR
+  base_currency: GBP        # currency your account is valued in: USD, GBP or EUR
   capital: 10000            # starting capital in base currency
   broker: t212              # t212 or ibkr — selects the cost model and the tradable universe
   fractional_shares: true   # T212 supports fractional on most stocks; IBKR on US + some EU
@@ -23,6 +23,7 @@ model:
   train_window_weeks: 260   # rolling 5y of history per fit
   min_train_weeks: 156      # need 3y before the first live prediction
   retrain_every_weeks: 4
+  score_smoothing_weeks: 4  # average each stock's score over the last 4 weeks: cuts turnover ~8x
   # Blend of ML prediction and a transparent momentum baseline; 1.0 = pure ML.
   ml_weight: 0.7
   lgbm:
@@ -38,12 +39,13 @@ model:
 
 portfolio:
   n_positions: 15
-  hold_rank: 45             # keep a holding while it ranks inside the top 45 (cuts turnover)
+  hold_rank: 150            # keep a holding while it ranks inside the top 150 of ~245 (cuts turnover)
   max_per_country: 6
+  max_per_sector: 15        # 15 = no cap. A cap of 4 cut backtest CAGR 25%->22% but limits sector bets
   cash_buffer: 0.02         # keep 2% cash for fees and FX
   min_trade_value: 75       # skip trades smaller than this (base currency)
   rebalance_drift: 0.30     # only resize a kept position if it drifted >30% from target
-  regime_filter: true       # halve exposure when the universe is below its 40-week average
+  regime_filter: false      # halve exposure below the 40-week average; cost ~3%/yr in backtest (whipsaw)
   regime_exposure: 0.5
 
 costs:

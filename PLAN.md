@@ -102,6 +102,8 @@ model predicts. A EUR stock that rose 5% while EUR fell 5% is flat for a USD acc
   enforces this embargo.
 - **Retraining:** every 4 weeks, on a rolling 260-week window, with at least 156 weeks of
   history before the first prediction.
+- **Score smoothing:** each stock's traded score is the average of its last 4 weekly scores. Raw
+  weekly scores are noisy, and trading on them replaced half the portfolio every week (see §13).
 - **Three variants are reported side by side:** ML only, momentum baseline only, and the blend.
   If ML can't beat the simple baseline after costs, we trade the baseline. That's a valid outcome.
 - **Leak tests (in `tests/`):** on synthetic pure-noise prices the model must show no skill.
@@ -116,12 +118,14 @@ share of capital per year. The blend is always compared with the equal-weight be
 | Rule | Default | Why |
 |---|---|---|
 | Positions | 15, equal weight | ~650 each at 10k. Enough to diversify, few enough to trade by hand |
-| Hold band | keep a holding while it ranks in the top 45 | Cuts turnover and costs substantially |
+| Hold band | keep a holding while it ranks in the top 150 (of ~245) | Holdings last ~33 weeks on average; turnover 6%/week |
+| Score smoothing | 4-week average of scores | Together with the hold band, cuts costs from 8%/yr to under 1%/yr |
 | Country cap | max 6 per country | Avoids a US-only portfolio by accident |
+| Sector cap | off by default (`max_per_sector: 15`) | Available: 4 per sector cuts single-sector bets but cost 3%/yr in backtest (§13) |
 | Cash buffer | 2% | Covers fees and FX |
 | Minimum trade | 75 | Skips trades too small to be worth the costs |
 | Drift rule | resize only if >30% off target | Fewer tiny top-ups |
-| Regime filter | 50% exposure when the universe is below its 40-week average | Cuts drawdowns in bear markets |
+| Regime filter | off by default | Tested: it cost ~3%/yr by missing rebounds and didn't reduce drawdowns (§13) |
 | Lots | JP/HK board lots (100+ shares) | These markets are excluded by default because one lot can exceed a position at 10k |
 
 ## 8. Costs and broker choice at 10k
@@ -142,7 +146,9 @@ statements and update `config.yaml`.
 ## 9. Risk management
 
 - **Position limits:** at most ~6.5% per name. No leverage, no shorting.
-- **Regime filter:** halves exposure in broad downtrends.
+- **Sector concentration:** each weekly report shows the sector mix. Momentum piles into hot
+  sectors (the Oct 2026 portfolio holds 7 chip stocks), and `max_per_sector` caps it if you prefer
+  less concentration than the backtest-optimal setting.
 - **Kill switches.** Stop trading and review if any of these happen:
   - drawdown exceeds 20% from the peak
   - live IC is negative on average over 12 consecutive weeks
@@ -165,7 +171,7 @@ statements and update `config.yaml`.
 | Phase | What | Exit criteria |
 |---|---|---|
 | **0. Build** (done) | Data pipeline, features, walk-forward model, cost-aware backtest, weekly order sheet, tests | Tests pass |
-| **1. Real-data backtest** | Run `download` + `backtest`. Test sensitivity to `n_positions` 10/15/20, `hold_rank` 30/45/60, `ml_weight` 0/0.5/0.7/1, regime filter on/off, and both brokers | **Go** if, after costs: the blend's IC averages >0.02 with t>2, it beats the equal-weight benchmark in most rolling 1-year windows, and results hold across settings (not one lucky parameter set). Otherwise fall back to the baseline or stop |
+| **1. Real-data backtest** (done, Oct 2026, see §13) | Run `download` + `backtest`. Test sensitivity to `n_positions` 10/15/20, `hold_rank` 30/45/60, `ml_weight` 0/0.5/0.7/1, regime filter on/off, and both brokers | **Go** if, after costs: the blend's IC averages >0.02 with t>2, it beats the equal-weight benchmark in most rolling 1-year windows, and results hold across settings (not one lucky parameter set). Otherwise fall back to the baseline or stop |
 | **2. Paper trading** | 8–12 weeks of weekly runs without money. Record what you *would* have traded and at what prices | Live IC and turnover are in line with the backtest |
 | **3. Live, 10k** | Trade the order sheet weekly. Track costs and slippage against the model's estimates | Kill switches not hit. Costs close to the model's estimates |
 | **4. News and event features** | Use the Claude API to score earnings-call transcripts, filings (8-K/10-Q) and news on a timestamped, point-in-time basis. Candidate features: guidance-change score, tone change versus last quarter, event flags (M&A, litigation, management change). Add them as model features and test them only on data dated *after* the scoring model's training cutoff | A feature adds IC out of sample, after the cutoff |
@@ -181,3 +187,61 @@ statements and update `config.yaml`.
   to be worse.
 - At 10k, **costs and FX fees matter**. The hold band and minimum trade size exist for this reason.
 - This is a research tool, not investment advice. Results are not guaranteed.
+
+## 13. Phase 1 results (October 2026)
+
+Settings: GBP account, Trading 212 costs, 15 positions, weekly rebalance, signals from Jan 2016 to
+Oct 2026 (562 weeks, 245 stocks). All returns are in GBP, after costs.
+
+![Backtest equity curve](docs/backtest_equity.png)
+
+### What the first run showed
+
+With the original settings (top-45 hold band, raw weekly scores, regime filter on), the strategy
+**lost to the benchmark**: 15.6% CAGR against 17.5%. The model had real skill (weekly IC 0.020,
+t-stat 2.75). Before costs it made 24.7% a year. But it replaced ~50% of the portfolio every week,
+and fees took 7.7% a year. Most trades in a GBP account pay T212's 0.15% FX fee, and UK buys pay
+0.5% stamp duty. The regime filter cost a further ~3.4% a year by missing rebounds.
+
+### How the settings were chosen
+
+To avoid fitting the past, settings were chosen on **Jan 2016 – Jun 2024 only**. **Jul 2024 – Oct
+2026 was kept as an untouched holdout.** The grid was small (12 combinations): label horizon 1 or 4
+weeks, score smoothing 1 or 4 weeks, hold band 45/90/150. The best tuning-period result was
+1-week labels, 4-week smoothing and a top-150 hold band. All 12 combinations beat the benchmark's
+CAGR on the holdout, so the result does not depend on one lucky setting.
+
+### Results with the chosen settings
+
+| | CAGR | Volatility | Sharpe | Max drawdown | Weekly turnover | Costs / yr |
+|---|---|---|---|---|---|---|
+| **Blend (traded)** | **25.3%** | 19.1% | **1.28** | −23.8% | 5.8% | 0.9% |
+| ML only | 25.8% | 19.9% | 1.26 | −27.0% | 7.6% | 1.2% |
+| Momentum baseline | 13.9% | 15.9% | 0.90 | −23.2% | 3.4% | 0.5% |
+| Equal-weight benchmark | 17.5% | 14.5% | 1.19 | −27.3% | — | — |
+
+| Period | Blend CAGR / Sharpe | Benchmark CAGR / Sharpe |
+|---|---|---|
+| Tuning, Jan 2016 – Jun 2024 | 24.9% / 1.31 | 18.5% / 1.20 |
+| **Holdout, Jul 2024 – Oct 2026** | **26.9% / 1.20** | 14.1% / 1.17 |
+
+The blend beat the benchmark in 9 of 11 calendar years. It lagged in 2021 (−5.1 pts) and 2022
+(−5.9 pts). Profits came from 125 different stocks; the top 10 made 49% of the total.
+
+### Sector cap test
+
+A cap of 4 stocks per sector cut CAGR from 25.3% to 22.2% over the full period, and from 26.9% to
+18.9% in the holdout (Sharpe 0.96). Drawdowns didn't improve. The cap is available but off by
+default. Note that today's universe includes the semiconductor winners *because* they won, so the
+backtest likely overstates the value of concentrating in them.
+
+### How to read these numbers
+
+- **Survivorship bias inflates both lines.** The universe is today's large caps. The strategy's
+  *excess* over the equal-weight benchmark (~8 pts a year) is the more meaningful figure, and even
+  that is probably optimistic.
+- **The edge is modest and volatile.** Weekly IC is ~0.02, and the model ranks stocks better than
+  chance in only 55% of weeks (the portfolio itself is up in 60% of weeks). Two losing years against the benchmark in a row (2021–22) is normal for this kind of
+  strategy, not a sign that it has broken.
+- **Next step:** paper trade for 8–12 weeks (Phase 2). Compare live weekly IC and turnover with the
+  backtest before committing the 10k.

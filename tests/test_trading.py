@@ -9,6 +9,7 @@ from wq.portfolio import execute, generate_orders, quantize, select_targets
 def meta():
     return pd.DataFrame({
         "country": ["US", "US", "UK", "JP", "DE"],
+        "sector": ["Tech", "Tech", "Financials", "ConsDisc", "Health"],
         "currency": ["USD", "USD", "GBp", "JPY", "EUR"],
         "lot_size": [1, 1, 1, 100, 1],
         "name": list("ABCDE"),
@@ -65,3 +66,12 @@ def test_orders_and_execution_never_overdraw(cfg, meta):
     assert all(float(q).is_integer() for q in new_shares.values())
     total = new_cash + sum(q * price[t] for t, q in new_shares.items())
     assert total == pytest.approx(equity - cost)
+
+
+def test_sector_cap(cfg, meta):
+    cfg["account"]["fractional_shares"] = True
+    cfg["portfolio"].update(n_positions=3, hold_rank=4, max_per_country=3, max_per_sector=1)
+    price = pd.Series({"AAA": 100, "BBB": 50, "CCC.L": 10, "7203.T": 20, "DDD.DE": 80})
+    scores = pd.Series({"AAA": 0.9, "BBB": 0.8, "CCC.L": 0.6, "7203.T": 0.1, "DDD.DE": 0.5})
+    t = select_targets(scores, set(), meta, price, 100000, cfg)
+    assert set(t) == {"AAA", "CCC.L", "DDD.DE"}

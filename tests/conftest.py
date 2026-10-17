@@ -18,7 +18,8 @@ def make_market(n=60, start="2011-01-03", end="2019-12-31", drift_dispersion=0.0
     for i in range(n):
         country, region, ccy, suffix = COUNTRIES[i % 3]
         t = f"S{i:03d}{suffix}"
-        rows.append({"ticker": t, "name": t, "country": country, "region": region, "currency": ccy,
+        rows.append({"ticker": t, "name": t, "country": country, "sector": f"Sec{i % 6}", "region": region,
+                     "currency": ccy,
                      "lot_size": 1, "brokers": "t212|ibkr"})
         r = mu[i] + rng.normal(0, 0.25 / np.sqrt(252), len(idx))
         p = 100 * np.exp(np.cumsum(r))
