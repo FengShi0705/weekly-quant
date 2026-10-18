@@ -35,25 +35,33 @@ def recent_raw_scores(panel, cfg, dates):
     """Unsmoothed scores for `dates` (oldest first, newest last).
 
     Earlier weeks come from the score history, so the 4-week average uses the scores you actually
-    traded on. Missing weeks, and always the newest week, are scored by walk_forward exactly as the
-    backtest scores them. Returns (scores, model fitted for the newest week, weeks reused).
+    traded on. The newest week is reused only if it was scored earlier the same day (a later step of
+    the same weekly run); otherwise it, and any missing week, is scored by walk_forward exactly as the
+    backtest scores it. Returns (scores, model fitted for the newest week or None, weeks reused).
     """
-    path, fp = cfg["paths"]["score_history"], model_fingerprint(cfg)
+    path, fp, today = cfg["paths"]["score_history"], model_fingerprint(cfg), str(date.today())
     history = pd.read_csv(path, parse_dates=["date"]) if path.exists() else pd.DataFrame(
-        columns=["date", "ticker", "ml", "baseline", "score", "model"])
-    reuse = history[(history["model"] == fp) & history["date"].isin(dates[:-1])]
+        columns=["date", "ticker", "ml", "baseline", "score", "model", "scored_on"])
+    if "scored_on" not in history:
+        history["scored_on"] = ""
+    same_settings = history["model"] == fp
+    earlier = history["date"].isin(dates[:-1])
+    newest_today = (history["date"] == dates[-1]) & (history["scored_on"].astype(str) == today)
+    reuse = history[same_settings & (earlier | newest_today)]
     reused = sorted(reuse["date"].unique())
     todo = [d for d in dates if d not in set(reused)]
-    new, model = walk_forward(panel, cfg, todo, verbose=True, return_model=True)
+    new, model = walk_forward(panel, cfg, todo, verbose=True, return_model=True) if todo else (None, None)
 
-    keep = history[~history["date"].isin(new.index.get_level_values("date").unique())]
-    path.parent.mkdir(parents=True, exist_ok=True)
-    pd.concat([keep, new.reset_index().assign(model=fp)]).sort_values(["date", "ticker"]).to_csv(path, index=False)
+    if new is not None and len(new):
+        keep = history[~history["date"].isin(new.index.get_level_values("date").unique())]
+        path.parent.mkdir(parents=True, exist_ok=True)
+        fresh = new.reset_index().assign(model=fp, scored_on=today)
+        pd.concat([keep, fresh]).sort_values(["date", "ticker"]).to_csv(path, index=False)
 
     if not reused:
         return new, model, reused
     saved = reuse.set_index(["date", "ticker"])[["ml", "baseline", "score"]].astype(float)
-    return pd.concat([saved, new]).sort_index(), model, reused
+    return (pd.concat([saved, new]) if new is not None else saved).sort_index(), model, reused
 
 
 def run(cfg, close_local, volume, fx_usd, universe):

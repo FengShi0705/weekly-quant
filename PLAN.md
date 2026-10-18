@@ -376,9 +376,27 @@ bias.
 4. It commits everything under `paper/` to GitHub.
 
 When Trading 212 Practice API keys are set in the environment, it also runs `python -m wq t212 --execute`.
-This mirrors `main`'s orders in the Trading 212 Practice account (virtual money; the code can only reach
-the demo server) and syncs the real fills. Comparing those fills with the simulated ones measures real
-slippage and FX fees.
+This trades `main` in the Trading 212 Practice account (virtual money; the code can only reach the demo
+server):
+1. It syncs last week's real fills and the account value.
+2. It plans this week's orders from what the Practice account actually holds (positions and free cash
+   from the API), using `main`'s settings and the same saved scores as the simulated ledger.
+3. It sends the orders, sells first.
+4. It writes `paper/t212_practice/comparison.md`.
+
+**Two records, on purpose.** The simulated ledger is what the backtest assumes: fills at the Monday close
+with the cost model. It is never adjusted. The Practice account is what really happens. Because the
+Practice orders are planned from the real holdings, any drift (a rejected order, a different fill price, a
+fee the model missed) is corrected by the strategy's normal rules at the next Saturday run. Nothing trades
+mid-week except a one-off resend of orders Trading 212 rejected, on the Monday after they were sent.
+When both accounts hold the same things, they get identical orders (a test checks this). The comparison
+report shows each real fill's cost against the model's estimate:
+
+- price paid vs that day's close, in the stock's own currency
+- plus Trading 212's actual fees, by name
+
+It also shows the Practice account's value next to the simulated one. That is the evidence for the
+go-live cost rule below.
 
 **Review rules, set before any results** (review after 8–12 weeks, mid-December 2026 to mid-January 2027):
 

@@ -158,3 +158,25 @@ def test_score_history_is_reused_only_for_same_model_settings(cfg, signal_market
     cfg["model"]["ml_weight"] = 0.5
     _, _, reused = recent_raw_scores(panel, cfg, dates[-4:])
     assert reused == []                                                  # settings changed: rescore everything
+
+
+def test_newest_week_is_reused_only_within_the_same_day(cfg, signal_market, monkeypatch):
+    import datetime as dt
+    from wq import weekly
+
+    close, volume, fx, universe = signal_market
+    cfg["model"]["retrain_every_weeks"] = 1
+    panel, _, _ = prepare(cfg, close, volume, fx, universe)
+    dates = list(panel.index.get_level_values("date").unique().sort_values())[-4:]
+    first, _, _ = weekly.recent_raw_scores(panel, cfg, dates)
+    again, model, reused = weekly.recent_raw_scores(panel, cfg, dates)       # same day: nothing retrained
+    assert reused == dates and model is None
+    pd.testing.assert_frame_equal(again, first, check_like=True)
+
+    class Tomorrow(dt.date):
+        @classmethod
+        def today(cls):
+            return dt.date(2099, 1, 1)
+    monkeypatch.setattr(weekly, "date", Tomorrow)
+    _, model, reused = weekly.recent_raw_scores(panel, cfg, dates)             # another day: newest rescored
+    assert reused == dates[:-1] and model is not None

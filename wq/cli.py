@@ -172,5 +172,11 @@ def main(argv=None):
         from . import t212
         client = t212.Client()
         spec = cfg["_root"] / args.spec
+        universe = load_universe(cfg)
+        close, volume, fx = load_cached(cfg)
         t212.sync(client, spec)
-        t212.place(client, spec, load_universe(cfg), execute=args.execute, retry_rejected=args.retry_rejected)
+        if not args.retry_rejected:
+            print(f"  prices up to {close.index.max().date()}")
+            t212.plan_from_account(client, cfg, spec, close, volume, fx, universe)
+        t212.place(client, spec, universe, execute=args.execute, retry_rejected=args.retry_rejected)
+        t212.compare(spec, cfg, close, fx, universe)

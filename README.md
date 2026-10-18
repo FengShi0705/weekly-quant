@@ -46,9 +46,13 @@ orders at the Monday close, records account value next to buy & hold of index fu
 week's orders. State and weekly order sheets are kept in `paper/<strategy>/`, and `paper/summary.md`
 compares the strategies. A scheduled cloud run does this every Saturday.
 
-`python -m wq t212 [--execute]` mirrors the main strategy's orders in a **Trading 212 Practice** account
-through Trading 212's API. It can only reach the Practice (demo) server and is a dry run unless you pass
-`--execute`. Credentials: Practice API keys stored as a network secret on the cloud environment for
+`python -m wq t212 [--execute]` trades the main strategy in a **Trading 212 Practice** account through
+Trading 212's API. It can only reach the Practice (demo) server and is a dry run unless you pass
+`--execute`. Each week it plans orders from the account's real positions and cash, so any drift from the
+simulated ledger is corrected at the next run. It also writes `paper/t212_practice/comparison.md`: real
+fill prices and fees next to the cost model, and the account's value next to the simulated ledger's.
+`--retry-rejected` resends only the latest week's orders that Trading 212 rejected (for example for lack of
+free cash before the sells filled). Credentials: Practice API keys stored as a network secret on the cloud environment for
 `demo.trading212.com` (type Username and password: username = API key, password = API secret), or as the
 `T212_API_KEY` and `T212_API_SECRET` environment variables.
 Unmapped tickers can be fixed in `paper/t212_overrides.yaml` (`yahoo_ticker: T212_TICKER`).

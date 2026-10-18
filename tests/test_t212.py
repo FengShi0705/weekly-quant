@@ -1,10 +1,11 @@
 import base64
 import json
+from datetime import date
 
 import pandas as pd
 import pytest
 
-from wq import t212
+from wq import paper, t212
 
 INSTRUMENTS = [
     {"ticker": "AAPL_US_EQ", "shortName": "AAPL", "currencyCode": "USD", "type": "STOCK"},
@@ -29,21 +30,24 @@ class FakeResponse:
 class FakeT212:
     """Mimics the demo server, including its rejection of quantities with too many decimals."""
 
-    def __init__(self, positions=(), precision=None, open_orders=()):
+    def __init__(self, positions=(), precision=None, open_orders=(), cash=0.0, instruments=INSTRUMENTS):
         self.calls, self.positions, self.next_id = [], list(positions), 100
         self.precision = precision or {}
         self.open_orders = list(open_orders)
+        self.cash, self.instruments = cash, instruments
 
     def request(self, method, url, headers=None, timeout=None, json=None, params=None):
         assert url.startswith(t212.DEMO)
         self.calls.append((method, url.removeprefix(t212.DEMO), json))
         path = url.removeprefix(t212.DEMO)
         if path == "/equity/metadata/instruments":
-            return FakeResponse(INSTRUMENTS)
+            return FakeResponse(self.instruments)
         if path == "/equity/positions":
             return FakeResponse(self.positions)
         if path == "/equity/orders":
             return FakeResponse(self.open_orders)
+        if path == "/equity/account/summary":
+            return FakeResponse({"currency": "GBP", "totalValue": self.cash, "cash": {"availableToTrade": self.cash}})
         if path == "/equity/orders/market":
             allowed = self.precision.get(json["ticker"], 4)
             if round(abs(json["quantity"]) * 10 ** allowed, 6) % 1:
@@ -80,13 +84,13 @@ def test_map_tickers_by_symbol_and_currency():
 @pytest.fixture
 def spec(tmp_path):
     p = tmp_path / "paper" / "strategies.yaml"
-    (tmp_path / "paper" / "main").mkdir(parents=True)
+    (tmp_path / "paper" / "t212_practice").mkdir(parents=True)
     p.write_text("start_capital: 10000\nt212_practice: main\nstrategies:\n  main: {}\n")
     pd.DataFrame([
         {"signal_date": "2026-10-16", "ticker": "AAPL", "side": "buy", "shares": 1.23456, "reason": "enter"},
         {"signal_date": "2026-10-16", "ticker": "BARC.L", "side": "sell", "shares": 50, "reason": "exit"},
         {"signal_date": "2026-10-16", "ticker": "NESN.SW", "side": "buy", "shares": 3, "reason": "enter"},
-    ]).to_csv(p.parent / "main" / "pending_orders.csv", index=False)
+    ]).to_csv(p.parent / "t212_practice" / "pending_orders.csv", index=False)
     return p
 
 
@@ -121,7 +125,6 @@ def test_precision_rejection_is_resent_truncated(spec):
 
 def test_retry_rejected_resends_only_rejected_orders(spec):
     d = spec.parent / "t212_practice"
-    d.mkdir()
     pd.DataFrame([
         {"signal_date": "2026-10-16", "sent_on": "2026-10-18", "ticker": "AAPL", "t212_ticker": "AAPL_US_EQ",
          "quantity": 1.2346, "order_id": None, "status": 'error: HTTP 400: {"type":"/api-errors/quantity-precision-mismatch"}'},
@@ -145,7 +148,6 @@ def test_retry_rejected_resends_only_rejected_orders(spec):
 
 def test_retry_rejected_skips_tickers_with_an_open_order(spec):
     d = spec.parent / "t212_practice"
-    d.mkdir()
     pd.DataFrame([{"signal_date": "2026-10-16", "sent_on": "2026-10-18", "ticker": "AAPL",
                    "t212_ticker": "AAPL_US_EQ", "quantity": 1.0, "order_id": None,
                    "status": "error: HTTP 400: rejected"}]).to_csv(d / "orders_placed.csv", index=False)
@@ -153,3 +155,97 @@ def test_retry_rejected_skips_tickers_with_an_open_order(spec):
     rows = t212.place(client(fake), spec, UNIVERSE, execute=True, retry_rejected=True)
     assert rows[0]["status"] == "skipped: an open order already exists"
     assert not [c for c in fake.calls if c[0] == "POST"]
+
+
+def synthetic_instruments(universe):
+    out = []
+    for t, ccy in universe["currency"].items():
+        sym = t212.YAHOO_SUFFIX.sub("", t)
+        out.append({"ticker": f"{sym}_EQ", "shortName": sym, "currencyCode": t212.T212_CCY.get(ccy, ccy),
+                    "type": "STOCK"})
+    return out
+
+
+def test_account_holdings_maps_positions_and_cash():
+    fake = FakeT212(positions=[{"instrument": {"ticker": "AAPL_US_EQ"}, "quantity": 2.5},
+                               {"ticker": "XYZ_US_EQ", "quantity": 1}], cash=123.45)
+    shares, cash, unmanaged = t212.account_holdings(client(fake), UNIVERSE)
+    assert shares == {"AAPL": 2.5} and cash == 123.45 and unmanaged == {"XYZ_US_EQ": 1.0}
+
+
+def test_practice_orders_are_planned_from_the_real_account(cfg, signal_market, tmp_path):
+    close, volume, fx, universe = signal_market
+    cfg["data"]["cache_dir"] = tmp_path / "no_cache"
+    cfg["portfolio"]["hold_rank"] = 20                             # the synthetic universe has only 60 stocks
+    spec = tmp_path / "paper" / "strategies.yaml"
+    spec.parent.mkdir()
+    spec.write_text("start_capital: 10000\nt212_practice: main\nstrategies:\n  main: {}\n")
+    week = close.loc[:"2019-12-13"]
+    args = (week, volume.loc[week.index], fx.loc[week.index], universe)
+    paper.run(cfg, *args, spec)
+    main, real_dir = spec.parent / "main", spec.parent / "t212_practice"
+    simulated = pd.read_csv(main / "pending_orders.csv")
+    inst = synthetic_instruments(universe)
+
+    # Same holdings as the simulated ledger (all cash): the same orders, from the same saved scores.
+    t212.plan_from_account(client(FakeT212(cash=10000, instruments=inst)), cfg, spec, *args)
+    pd.testing.assert_frame_equal(pd.read_csv(real_dir / "pending_orders.csv"), simulated)
+
+    # Drift: the account holds a stock the strategy ranks last, and less cash. The plan sells all of it
+    # and spends no more than the account has.
+    scores = pd.read_csv(main / "reports" / str(date.today()) / "all_scores.csv", index_col=0)["score"]
+    worst = scores.idxmin()
+    fake = FakeT212(positions=[{"ticker": f"{t212.YAHOO_SUFFIX.sub('', worst)}_EQ", "quantity": 7}],
+                    cash=4000, instruments=inst)
+    result = t212.plan_from_account(client(fake), cfg, spec, *args)
+    real = pd.read_csv(real_dir / "pending_orders.csv").set_index("ticker")
+    assert real.loc[worst, "side"] == "sell" and real.loc[worst, "shares"] == 7
+    buys = sum(o["value"] for o in result["orders"] if o["side"] == "buy")
+    sells = sum(o["value"] for o in result["orders"] if o["side"] == "sell")
+    assert buys <= 4000 + sells
+    assert pd.read_csv(main / "pending_orders.csv").equals(simulated)          # simulated ledger untouched
+    assert pd.read_csv(main / "holdings.csv").set_index("ticker")["shares"].to_dict() == {"CASH": 10000}
+
+    # Orders still open in the account: plan nothing.
+    (real_dir / "pending_orders.csv").unlink()
+    busy = FakeT212(cash=4000, instruments=inst, open_orders=[{"ticker": "S000_EQ", "quantity": 1}])
+    assert t212.plan_from_account(client(busy), cfg, spec, *args) is None
+    assert not (real_dir / "pending_orders.csv").exists()
+
+
+def test_compare_real_fills_with_the_model(cfg, signal_market, tmp_path):
+    close, _, fx, universe = signal_market
+    spec = tmp_path / "paper" / "strategies.yaml"
+    d, main = spec.parent / "t212_practice", spec.parent / "main"
+    d.mkdir(parents=True)
+    main.mkdir()
+    spec.write_text("start_capital: 10000\nt212_practice: main\nstrategies:\n  main: {}\n")
+    day, us, uk = pd.Timestamp("2019-12-16"), "S000", "S001.L"
+    gbp_per_usd = 1 / fx.at[day, "GBP"]
+    us_px, uk_px = close.at[day, us] * 1.001, close.at[day, uk] * 0.998     # 10 bps worse, 20 bps worse
+    us_val = 2 * us_px * gbp_per_usd
+    pd.DataFrame([
+        {"order_id": 1, "ticker": "S000_EQ", "side": "BUY", "filled_at": "2019-12-16T14:30:01Z", "quantity": 2,
+         "price": us_px, "instrument_ccy": "USD", "fx_rate": gbp_per_usd, "net_value": us_val * 1.0015,
+         "account_ccy": "GBP", "fees": us_val * 0.0015, "fees_detail": "CURRENCY_CONVERSION_FEE"},
+        {"order_id": 2, "ticker": "S001_EQ", "side": "SELL", "filled_at": "2019-12-16T08:00:02Z", "quantity": -10,
+         "price": uk_px, "instrument_ccy": "GBX", "fx_rate": 0.01, "net_value": 10 * uk_px / 100,
+         "account_ccy": "GBP", "fees": 0, "fees_detail": ""},
+    ]).to_csv(d / "fills.csv", index=False)
+    pd.DataFrame([{"signal_date": "2019-12-13", "ticker": us, "order_id": 1, "status": "sent"},
+                  {"signal_date": "2019-12-13", "ticker": uk, "order_id": 2, "status": "sent"},
+                  {"signal_date": "2019-12-13", "ticker": "S002.DE", "order_id": None, "status": "error: HTTP 400"}]
+                 ).to_csv(d / "orders_placed.csv", index=False)
+    pd.DataFrame([{"date": "2019-12-21", "total_value": 10050.0}]).to_csv(d / "account.csv", index=False)
+    pd.DataFrame([{"date": "2019-12-20", "equity": 10000.0}]).to_csv(main / "nav.csv", index=False)
+
+    trades = t212.compare(spec, cfg, close, fx, universe).set_index("ticker")
+    assert trades.loc[us, "vs_close_bps"] == pytest.approx(10, abs=0.1)
+    assert trades.loc[us, "real_fees_bps"] == pytest.approx(15, abs=0.1)
+    assert trades.loc[us, "model_cost_bps"] == pytest.approx(25, abs=0.1)        # slippage 10 + FX fee 15
+    assert trades.loc[uk, "vs_close_bps"] == pytest.approx(20, abs=0.1)          # sold below the close
+    assert trades.loc[uk, "real_total_bps"] == pytest.approx(20, abs=0.1)
+    assert trades.loc[uk, "model_cost_bps"] == pytest.approx(10, abs=0.1)        # no stamp duty on sells
+    assert trades.loc[uk, "value_GBP"] == pytest.approx(10 * uk_px / 100, abs=0.01)
+    text = (d / "comparison.md").read_text()
+    assert "2 fills" in text and "| 2019-12-21" in text and "50" in text
