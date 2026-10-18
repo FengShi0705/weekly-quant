@@ -6,7 +6,7 @@ import pandas as pd
 
 from . import backtest, paper, weekly
 from .config import load_config
-from .data import download, load_benchmarks, load_cached, load_universe
+from .data import download, load_benchmarks, load_cached, load_dividends, load_universe
 
 # Reference palette (light): categorical slots in fixed order; the stock-universe benchmark recedes in gray.
 SLOTS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100"]
@@ -106,7 +106,7 @@ def cmd_backtest(cfg):
     close, volume, fx = load_cached(cfg)
     universe = load_universe(cfg)
     etf_px = load_benchmarks(cfg, fx)
-    res = backtest.run(cfg, close, volume, fx, universe, etf_px=etf_px)
+    res = backtest.run(cfg, close, volume, fx, universe, etf_px=etf_px, div_yield=load_dividends(cfg))
     out = cfg["paths"]["reports"] / "backtest"
     out.mkdir(parents=True, exist_ok=True)
     for k, (r, trades) in res["results"].items():

@@ -110,7 +110,7 @@ def plan(cfg, close_local, volume, fx_usd, universe, shares, cash, prepared=None
             "ref_price_local": round(float(local[t]), 4), "quote_ccy": ccy,
             "est_value_" + base: round(o["value"], 2),
             "est_cost_" + base: round(trade_cost(o["value"], o["shares"], universe.loc[t, "country"], ccy,
-                                                 o["side"], cfg, upb), 2),
+                                                 o["side"], cfg, upb, t), 2),
             "reason": o["reason"],
         })
     order_df = pd.DataFrame(rows)

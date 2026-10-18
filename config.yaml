@@ -56,8 +56,22 @@ portfolio:
 
 costs:
   slippage_bps: 10          # spread + market impact for a retail order in a large cap
-  # Taxes on buys, by country of listing.
-  buy_tax_bps: {UK: 50, FR: 30, IT: 10, ES: 20}
+  # Taxes on buys, by country (as of Oct 2026): UK stamp duty/SDRT 0.5%; French FTT 0.4% since
+  # 1 Apr 2025; Italian FTT 0.2% since 1 Jan 2026; Spanish FTT 0.2%. They follow where the issuer is
+  # incorporated, not where it is listed, so out-of-scope issuers are overridden below.
+  buy_tax_bps: {UK: 50, FR: 40, IT: 20, ES: 20}
+  buy_tax_overrides:
+    AIR.PA: 0               # Airbus SE is Dutch: not on France's 2026 FTT list
+    EXPN.L: 0               # Experian is a Jersey company: no UK stamp duty or SDRT (its investor site)
+    # Unconfirmed, so still charged: GLEN.L, WPP.L (Jersey companies), RACE.MI (Dutch N.V., Italian
+    # tax resident). Check the fees on their first real Trading 212 fills (comparison.md).
+  sell_tax_bps: {US: 0.21}  # SEC fee 0.00206% of US sells from 4 Apr 2026 (FINRA's is negligible)
+  # Dividend tax withheld at source. In an ISA it can't be reclaimed, so it is a cost of holding.
+  # US 15% with a W-8BEN; Germany 26.375% per Trading 212's own example; others at the statutory
+  # rate for non-residents, as treaty relief at source isn't assumed (France: 25%, or 12.8% if the
+  # individual rate is applied). UK dividends: none. Check against real dividends in the account.
+  dividend_withholding: {US: 0.15, DE: 0.26375, FR: 0.25, NL: 0.15, ES: 0.19, IT: 0.26, CH: 0.35,
+                         JP: 0.15315, CA: 0.25, SE: 0.30, DK: 0.27, FI: 0.35, HK: 0.0, UK: 0.0}
   t212:
     commission_pct: 0.0
     min_commission: 0.0

@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from .costs import trade_cost
+from .costs import dividend_tax, dividend_tax_per_share, trade_cost
 from .data import to_base, usd_per_base
 from .features import build_panel, market_index
 from .model import information_coefficients, smooth_scores, walk_forward
@@ -16,18 +16,24 @@ def prepare(cfg, close_local, volume, fx_usd, universe):
     return build_panel(px_base, volume, universe, cfg)
 
 
-def simulate(scores, panel, cal, px, universe, fx_usd, cfg, variant="score", capital=None, deposits=None):
-    """deposits: optional Series signal_date -> cash added before that week's trades."""
+def simulate(scores, panel, cal, px, universe, fx_usd, cfg, variant="score", capital=None, deposits=None,
+             div_tax=None):
+    """deposits: optional Series signal_date -> cash added before that week's trades.
+    div_tax: cumulative dividend tax per share (costs.dividend_tax_per_share), charged on holdings.
+    """
     base = cfg["account"]["base_currency"]
     px_val = px.ffill()
     mkt_w = market_index(px).reindex(cal.index, method="ffill")
     cash = float(cfg["account"]["capital"] if capital is None else capital)
-    shares, rows, trades = {}, [], []
+    shares, rows, trades, prev_e = {}, [], [], None
     for T in scores.index.get_level_values("date").unique():
         e = cal.loc[T, "exec_date"]
         if pd.isna(e):
             break
         price = px_val.loc[e]
+        withheld = dividend_tax(shares, div_tax, prev_e, e)          # on last week's holdings
+        cash -= withheld
+        prev_e = e
         deposit = float(deposits.get(T, 0.0)) if deposits is not None else 0.0
         cash += deposit
         equity = cash + sum(q * price[t] for t, q in shares.items())
@@ -39,7 +45,7 @@ def simulate(scores, panel, cal, px, universe, fx_usd, cfg, variant="score", cap
         shares, cash, cost, filled = execute(orders, shares, cash, price, universe, cfg,
                                              usd_per_base(fx_usd, base, e))
         rows.append({"signal_date": T, "exec_date": e, "deposit": deposit, "equity": equity, "cash_after": cash,
-                     "positions": len(shares), "exposure": expo, "cost": cost,
+                     "positions": len(shares), "exposure": expo, "cost": cost, "dividend_tax": withheld,
                      "turnover": sum(o["value"] for o in filled) / equity if equity > 0 else 0.0})
         trades += [{"signal_date": T, "exec_date": e, **o} for o in filled]
     res = pd.DataFrame(rows).set_index("signal_date")
@@ -134,8 +140,10 @@ def ic_summary(ic):
                 "pct_positive": (ic[c] > 0).mean()} for c in ic.columns}
 
 
-def run(cfg, close_local, volume, fx_usd, universe, etf_px=None, verbose=True):
+def run(cfg, close_local, volume, fx_usd, universe, etf_px=None, verbose=True, div_yield=None):
+    """div_yield: daily dividend yields (data.load_dividends); with it, dividend tax is charged."""
     panel, cal, px = prepare(cfg, close_local, volume, fx_usd, universe)
+    div_tax = dividend_tax_per_share(px, div_yield, universe, cfg) if div_yield is not None else None
     start = pd.Timestamp(cfg["backtest"]["start"])
     pred_dates = [d for d in cal.index if d >= start and pd.notna(cal.loc[d, "exec_date"])]
     if verbose:
@@ -147,13 +155,15 @@ def run(cfg, close_local, volume, fx_usd, universe, etf_px=None, verbose=True):
 
     results, summary = {}, {"ic": ic_summary(ic)}
     for v in VARIANTS:
-        res, trades = simulate(scores, panel, cal, px, universe, fx_usd, cfg, v)
+        res, trades = simulate(scores, panel, cal, px, universe, fx_usd, cfg, v, div_tax=div_tax)
         results[v] = (res, trades)
         m = metrics(res["ret"])
         m["final_value"] = float(res["equity"].iloc[-1])
         m["avg_weekly_turnover"] = res["turnover"].mean()
         m["total_costs"] = res["cost"].sum()
         m["cost_drag_per_year"] = (res["cost"] / res["equity"]).sum() / (len(res) / 52)
+        m["total_dividend_tax"] = res["dividend_tax"].sum()
+        m["dividend_tax_per_year"] = (res["dividend_tax"] / res["equity"]).sum() / (len(res) / 52)
         summary[v] = m
     dates = results["score"][0].index
     bench = benchmark_returns(panel, dates)
@@ -165,7 +175,8 @@ def run(cfg, close_local, volume, fx_usd, universe, etf_px=None, verbose=True):
     if etf_px is not None:
         deposits = monthly_deposits(dates, cfg["benchmarks"]["dca_monthly"])
         final_date = results["score"][0]["exec_date"].iloc[-1]
-        res_dca, _ = simulate(scores, panel, cal, px, universe, fx_usd, cfg, "score", capital=0.0, deposits=deposits)
+        res_dca, _ = simulate(scores, panel, cal, px, universe, fx_usd, cfg, "score", capital=0.0, deposits=deposits,
+                              div_tax=div_tax)
         dca["strategy"] = res_dca["equity"] - res_dca["deposit"]
         summary["dca_strategy"] = dca_summary(dca["strategy"], deposits, final_date)
         etfs = cfg["benchmarks"]["etfs"]

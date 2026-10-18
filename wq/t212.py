@@ -489,7 +489,8 @@ def _fill_costs(d, cfg, close_local, px, universe):
         side = "buy" if str(f["side"]).upper() == "BUY" or float(f["quantity"]) > 0 else "sell"
         value = _real_value(f)
         sign = 1 if side == "buy" else -1
-        model = trade_cost(value, qty, universe.loc[t, "country"], universe.loc[t, "currency"], side, cfg)
+        model = trade_cost(value, qty, universe.loc[t, "country"], universe.loc[t, "currency"], side, cfg,
+                           ticker=t)
         # Compare in the quote currency, so FX moves during the day don't count as cost. If the fill
         # price isn't in the quote currency's units, compare in base currency instead.
         ratio = float(f["price"]) / local.at[day, t]

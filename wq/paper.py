@@ -2,7 +2,8 @@
 
 Each run, for every strategy in paper/strategies.yaml:
   1. fill last run's orders at the close of the execution day (the Monday after the signal), with the
-     same cost model and cash rules as the backtest;
+     same cost model and cash rules as the backtest, and deduct the dividend tax withheld on what was
+     held since the last run;
   2. value the account at the latest close, next to buy & hold of the benchmark funds;
   3. score this week and save the new orders, to be filled at the next run.
 
@@ -16,7 +17,8 @@ import pandas as pd
 import yaml
 
 from .backtest import prepare
-from .data import load_benchmarks, usd_per_base
+from .costs import dividend_tax, dividend_tax_per_share
+from .data import load_benchmarks, load_dividends, usd_per_base
 from .portfolio import execute
 from .weekly import plan, read_holdings
 
@@ -56,6 +58,15 @@ def _append_csv(path, df, key=None):
     df.to_csv(path, index=False)
 
 
+def exec_date(cfg, px):
+    """The day last run's orders fill: the first trading day after their signal date (None if not yet)."""
+    path = cfg["paper_dir"] / "pending_orders.csv"
+    if not path.exists():
+        return None
+    later = px.index[px.index > pd.Timestamp(pd.read_csv(path)["signal_date"].iloc[0])]
+    return later[0] if len(later) else None
+
+
 def fill_pending(cfg, px, universe, fx_usd):
     """Fill last run's orders at the close of the first trading day after their signal date."""
     d = cfg["paper_dir"]
@@ -64,11 +75,10 @@ def fill_pending(cfg, px, universe, fx_usd):
         return []
     pending = pd.read_csv(path, parse_dates=["signal_date"])
     signal = pending["signal_date"].iloc[0]
-    later = px.index[px.index > signal]
-    if len(later) == 0:
+    e = exec_date(cfg, px)
+    if e is None:
         print(f"  orders from {signal.date()} can't be filled yet (no later prices)")
         return []
-    e = later[0]
     price = px.ffill().loc[e]
     shares, cash = read_holdings(cfg["paths"]["holdings"], cfg["account"]["capital"])
     orders = [{"ticker": r.ticker, "side": r.side, "shares": float(r.shares),
@@ -89,13 +99,29 @@ def fill_pending(cfg, px, universe, fx_usd):
     return filled
 
 
-def record_nav(cfg, px, etf_px):
+def charge_dividend_tax(cfg, cum_tax, start, end):
+    """Deduct from cash the dividend tax withheld on the current holdings between two days."""
+    path = cfg["paths"]["holdings"]
+    shares, cash = read_holdings(path, cfg["account"]["capital"])
+    tax = dividend_tax(shares, cum_tax, start, end)
+    if tax:
+        write_holdings(path, shares, cash - tax)
+    return tax
+
+
+def last_nav_date(cfg):
+    path = cfg["paper_dir"] / "nav.csv"
+    return pd.Timestamp(pd.read_csv(path)["date"].iloc[-1]) if path.exists() else None
+
+
+def record_nav(cfg, px, etf_px, dividend_tax=0.0):
     d = cfg["paper_dir"]
     shares, cash = read_holdings(cfg["paths"]["holdings"], cfg["account"]["capital"])
     last = px.index[-1]
     price = px.ffill().loc[last]
     equity = cash + sum(q * price[t] for t, q in shares.items())
-    row = {"date": last.date(), "equity": round(equity, 2), "cash": round(cash, 2), "positions": len(shares)}
+    row = {"date": last.date(), "equity": round(equity, 2), "cash": round(cash, 2), "positions": len(shares),
+           "dividend_tax": round(dividend_tax, 2)}
     if etf_px is not None:
         etf = etf_px.ffill().loc[:last].iloc[-1]
         row |= {f"{t}_price": round(float(v), 4) for t, v in etf.items()}
@@ -126,7 +152,8 @@ def summary(cfgs, etf_names):
         cost_col = [c for c in fills.columns if c.startswith("cost_")]
         row = {"strategy": name, "since": start["date"], "latest": now["date"],
                "value": f"{now['equity']:,.2f}", "return": f"{now['equity'] / cfg['account']['capital'] - 1:+.2%}",
-               "trades": len(fills), "costs": f"{fills[cost_col[0]].sum():,.2f}" if cost_col else "0.00"}
+               "trades": len(fills), "costs": f"{fills[cost_col[0]].sum():,.2f}" if cost_col else "0.00",
+               "dividend tax": f"{nav['dividend_tax'].fillna(0).sum():,.2f}" if "dividend_tax" in nav else "0.00"}
         for t, label in etf_names.items():
             if f"{t}_price" in nav:
                 row[f"{label} buy & hold"] = f"{now[f'{t}_price'] / start[f'{t}_price'] - 1:+.2%}"
@@ -138,18 +165,26 @@ def summary(cfgs, etf_names):
 def run(cfg, close_local, volume, fx_usd, universe, spec_path):
     cfgs = strategy_configs(cfg, spec_path)
     etf_px = load_benchmarks(cfg, fx_usd)
-    prepared = {}
+    div_yield = load_dividends(cfg)
+    prepared, div_tax = {}, {}
     for name, c in cfgs.items():
         print(f"\n=== {name} ===")
         key = (str(c["universe"]), c["model"]["label_horizon_weeks"])
         if key not in prepared:
             prepared[key] = prepare(c, close_local, volume, fx_usd, universe)
+            div_tax[key] = (dividend_tax_per_share(prepared[key][2], div_yield, universe, c)
+                            if div_yield is not None else None)
         _, _, px = prepared[key]
         c["paper_dir"].mkdir(parents=True, exist_ok=True)
         if not c["paths"]["holdings"].exists():
             write_holdings(c["paths"]["holdings"], {}, c["account"]["capital"])
+        # Dividend tax on what was held since the last run: the old holdings up to the fill, the new after.
+        since, e, last = last_nav_date(c), exec_date(c, px), px.index[-1]
+        withheld = charge_dividend_tax(c, div_tax[key], since, e if e is not None else last)
         fill_pending(c, px, universe, fx_usd)
-        equity = record_nav(c, px, etf_px)
+        if e is not None:
+            withheld += charge_dividend_tax(c, div_tax[key], max(e, since) if since is not None else e, last)
+        equity = record_nav(c, px, etf_px, withheld)
         print(f"  account value {equity:,.2f} {c['account']['base_currency']}")
         shares, cash = read_holdings(c["paths"]["holdings"], c["account"]["capital"])
         save_pending(c, plan(c, close_local, volume, fx_usd, universe, shares, cash, prepared[key]))

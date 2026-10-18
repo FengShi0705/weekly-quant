@@ -138,7 +138,7 @@ def execute(orders, shares, cash, price, meta, cfg, usd_per_base=1.0):
 
     def cost_of(o):
         return trade_cost(o["value"], o["shares"], meta.loc[o["ticker"], "country"],
-                          meta.loc[o["ticker"], "currency"], o["side"], cfg, usd_per_base)
+                          meta.loc[o["ticker"], "currency"], o["side"], cfg, usd_per_base, o["ticker"])
 
     for o in (o for o in orders if o["side"] == "sell"):
         c = cost_of(o)
