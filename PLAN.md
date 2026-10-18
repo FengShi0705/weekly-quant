@@ -142,7 +142,8 @@ help?), with buying and holding real index funds (VWRL, VUSA), and with investin
 | FX | 0.15% on each trade in a non-base currency | ~0.002% (min ~$2 per conversion; hold USD/EUR balances) |
 | Fractional shares | Most US/EU stocks | US and some EU |
 | Universe | US, UK, major EU | Global, including Nordics, Canada, Japan and Hong Kong |
-| Taxes (both) | UK stamp duty 0.5%, France FTT 0.3%, Italy 0.1%, Spain 0.2% (on buys) | same |
+| Taxes on buys (both) | UK stamp duty 0.5%, France FTT 0.4%, Italy 0.2%, Spain 0.2%. They follow where the issuer is incorporated (Airbus and Experian are exempt) | same |
+| Dividend tax (ISA) | Withheld at source and not reclaimable in an ISA: US 15% (W-8BEN), Germany 26.4%, Switzerland 35%, others at statutory rates; UK none | Not an ISA: foreign tax can be credited |
 
 Rule of thumb: Trading 212 is cheaper when you trade mostly in your account's own currency.
 IBKR is cheaper when you trade a lot in other currencies. Run the backtest with each
@@ -199,6 +200,10 @@ statements and update `config.yaml`.
 Settings: GBP account, Trading 212 costs, 15 positions, weekly rebalance, signals from Jan 2016 to
 Oct 2026 (562 weeks, 245 stocks). All returns are in GBP, after costs.
 
+The headline results below were re-run on 18 Oct 2026 after fixing the cost model and London
+dividends (see "Effect of the cost and dividend fixes" at the end of this section). The later
+subsections (holdout, sensitivity, sector cap) and §14 used the earlier data.
+
 ![Backtest equity curve](docs/backtest_equity.png)
 
 ### What the first run showed
@@ -223,27 +228,27 @@ CAGR on the holdout, so the result does not depend on one lucky setting.
 
 | | Final value | CAGR | Volatility | Sharpe | Max drawdown |
 |---|---|---|---|---|---|
-| **Strategy (70% ML + 30% momentum)** | **£105,545** | **24.4%** | 20.2% | **1.18** | −24.7% |
-| ML only | £135,845 | 27.4% | 20.8% | 1.27 | −25.7% |
-| Momentum rule only | £40,989 | 14.0% | 15.9% | 0.90 | −23.2% |
+| **Strategy (70% ML + 30% momentum)** | **£122,275** | **26.1%** | 20.1% | **1.26** | −23.5% |
+| ML only | £100,864 | 23.9% | 20.1% | 1.17 | −26.6% |
+| Momentum rule only | £56,076 | 17.3% | 16.1% | 1.08 | −22.5% |
 | Buy & hold Vanguard S&P 500 (VUSA) | £51,916 | 16.5% | 15.3% | 1.08 | −25.1% |
 | Buy & hold Vanguard FTSE All-World (VWRL) | £40,638 | 13.9% | 13.9% | 1.01 | −24.6% |
-| Equal-weight stock universe | £57,192 | 17.5% | 14.5% | 1.19 | −27.3% |
+| Equal-weight stock universe | £59,992 | 18.1% | 14.5% | 1.22 | −27.2% |
 
 **Monthly investing: £500 at the start of every month, Jan 2016 – Oct 2026 (£65,000 deposited)**
 
 | Invested into | Final value | Money-weighted return (XIRR) |
 |---|---|---|
-| **Strategy** | **£234,329** | **22.4%** |
+| **Strategy** | **£273,752** | **25.0%** |
 | Vanguard S&P 500 | £155,767 | 15.4% |
 | Vanguard FTSE All-World | £135,089 | 13.0% |
 
 ![Monthly investing](docs/backtest_dca.png)
 
-Weekly turnover 5.2%, costs 0.8% of the account a year, about 20 stock swaps a year. The strategy beat
-VWRL in 9 of 11 calendar years (it lagged in 2022 and in 2026 to date) and the equal-weight universe in
-8 of 11. Profits came from 123 different stocks; the top 10 made 52% of the total (NVIDIA, UniCredit,
-Rolls-Royce, ASM International and AMD were the largest).
+Weekly turnover 5.7%. Trading costs take 0.9% of the account a year and dividend tax 0.3%; about 23
+stock swaps a year. The strategy beat VWRL in 10 of 11 calendar years (it lags in 2026 to date) and
+the equal-weight universe in 8 of 11. Profits came from 136 different stocks; the top 10 made 51% of
+the total (Rolls-Royce, UniCredit, Intesa Sanpaolo, Standard Chartered and BBVA were the largest).
 
 ### Tuning period vs holdout
 
@@ -297,6 +302,41 @@ improve. The cap is available but off by default. Today's universe includes the 
   with similar worst drawdowns.
 - **Next step:** paper trade for 8–12 weeks (Phase 2). Compare live weekly IC and turnover with the
   backtest before committing the 10k.
+
+### Effect of the cost and dividend fixes (18 Oct 2026)
+
+Three corrections, found while researching the next model (`docs/GRPO transformer portfolio design.md`):
+
+1. **London dividends were missing.** Yahoo applies dividends of London (pence-quoted) stocks about
+   100x too small, so its adjusted prices for UK stocks were close to price-only. UK stocks were
+   missing about 3.75 points a year of return (median), in both the model's labels and the P&L.
+   `data.total_return` now rebuilds the adjusted prices from Yahoo's raw and adjusted closes with
+   that fixed. Other markets were unaffected.
+2. **Taxes on buys were out of date.** French FTT is 0.4% (since April 2025) and Italian 0.2% (since
+   January 2026). Taxes now follow the issuer (Airbus and Experian are exempt), and US sells pay the
+   SEC fee.
+3. **Dividend tax.** Foreign tax withheld on dividends can't be reclaimed in an ISA. It is now
+   charged on holdings: about 0.3% of the account a year.
+
+| | Before | After |
+|---|---|---|
+| Strategy CAGR / Sharpe / max drawdown | 24.4% / 1.18 / −24.7% | 26.1% / 1.26 / −23.5% |
+| ML only CAGR / Sharpe | 27.4% / 1.27 | 23.9% / 1.17 |
+| Momentum only CAGR / Sharpe | 14.0% / 0.90 | 17.3% / 1.08 |
+| Equal-weight universe CAGR / Sharpe | 17.5% / 1.19 | 18.1% / 1.22 |
+| Strategy return over equal weight (calendar years) | +7.8 pts/yr, t 1.6 | +8.9 pts/yr, t 1.7 |
+| Weekly IC: ML / strategy | 0.0225 (t 2.86) / 0.0219 (t 2.59) | 0.0188 (t 2.47) / 0.0181 (t 2.17) |
+| Trading costs / dividend tax, % of account a year | 0.8% / not charged | 0.9% / 0.3% |
+
+What this shows:
+
+- **Variant rankings are noise at this size.** ML only went from 3 points ahead of the blend to 2
+  points behind, from a data fix that touched only UK stocks. Differences of a few points of CAGR
+  between variants are not evidence; this is why both are paper traded (§15).
+- **The edge is still not statistically established.** The strategy's Sharpe is barely above its own
+  equal-weight universe's (1.26 vs 1.22), its excess return has t ≈ 1.7, and the blend's IC (0.018)
+  is now just under the Phase 1 go rule's 0.02 (t 2.17 still passes t > 2). The survivorship bias in
+  the hand-picked universe (§4) also flatters every number here.
 
 ## 14. Phase 1b: testing the weights and other strategy variants (October 2026)
 
@@ -370,7 +410,9 @@ bias.
 | `ml_only_10` | ML only, 10 stocks | The Phase 1b rule's pick (§14), run alongside so live data can separate them |
 
 **How.** A scheduled cloud run every Saturday at 08:56 UK time runs `python -m wq paper`:
-1. It fills last week's orders at the Monday close, with the backtest's cost model.
+1. It fills last week's orders at the Monday close, with the backtest's cost model, and deducts the
+   dividend tax withheld on what was held. (From 24 Oct 2026, with corrected London dividends. Until
+   they roll off, the 4-week score average reuses three weeks scored on the earlier data.)
 2. It records each account's value next to buy & hold of VWRL and VUSA.
 3. It plans this week's orders.
 4. It commits everything under `paper/` to GitHub.
