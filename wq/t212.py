@@ -373,6 +373,21 @@ def holdings_difference(real_path, sim_path, price, universe, tol=0.05):
     return pd.DataFrame(rows)
 
 
+def _practice_is_ahead(d, sim_dir):
+    """True once the Practice account has fills for the orders the simulated ledger still has pending.
+
+    Both accounts plan a week's orders on Saturday. The Practice orders fill on Monday; the simulated ones
+    are filled at the next Saturday run. In between, their holdings aren't comparable.
+    """
+    pending = sim_dir / "pending_orders.csv"
+    if not (pending.exists() and (d / "fills.csv").exists() and (d / "orders_placed.csv").exists()):
+        return False
+    signal = str(pd.read_csv(pending)["signal_date"].iloc[0])
+    placed = pd.read_csv(d / "orders_placed.csv")
+    ids = set(placed.loc[placed["signal_date"].astype(str) == signal, "order_id"].dropna().astype("int64"))
+    return bool(ids & set(pd.read_csv(d / "fills.csv")["order_id"].astype("int64")))
+
+
 def _holdings_section(diff, tol, day):
     stocks = diff[diff["ticker"] != "CASH"]
     only = {k: ", ".join(stocks.loc[stocks["held in"] == k, "ticker"]) or "none"
@@ -425,17 +440,26 @@ def compare(spec_path, cfg, close_local, fx_usd, universe, tol=0.05):
         lines += ["_No Trading 212 fills with a closing price yet._", ""]
     sim_dir = spec_path.parent / strategy
     if (d / "account.csv").exists() and (sim_dir / "nav.csv").exists():
+        # The simulated value is only known at the weekend run (at Friday's close), so compare weekend
+        # snapshots only; a weekday one (say a Monday resend) sits mid-week, after real trades.
         acct = pd.read_csv(d / "account.csv", parse_dates=["date"]).sort_values("date")
+        acct = acct[acct["date"].dt.dayofweek >= 5]
         sim = pd.read_csv(sim_dir / "nav.csv", parse_dates=["date"]).sort_values("date")
-        both = pd.merge_asof(acct, sim[["date", "equity"]], on="date", direction="backward")
+        both = pd.merge_asof(acct, sim[["date", "equity"]], on="date", direction="backward",
+                             tolerance=pd.Timedelta(days=3))
         both = both.rename(columns={"total_value": "Trading 212", "equity": "simulated"})
         both["difference"] = both["Trading 212"] - both["simulated"]
         both["date"] = both["date"].dt.date
-        lines += ["## Account value", "",
+        lines += ["## Account value", "", "At each weekend run, both valued at Friday's close.", "",
                   both[["date", "Trading 212", "simulated", "difference"]].round(2).to_markdown(index=False), ""]
     if (d / "holdings.csv").exists() and (sim_dir / "holdings.csv").exists():
-        diff = holdings_difference(d / "holdings.csv", sim_dir / "holdings.csv", px.iloc[-1], universe, tol)
-        lines += _holdings_section(diff, tol, px.index[-1].date())
+        if _practice_is_ahead(d, sim_dir):
+            lines += ["## Holdings that differ", "",
+                      "_Not compared now: the Practice account has already filled orders that the simulated "
+                      "ledger fills at the next Saturday run. Compared again then._", ""]
+        else:
+            diff = holdings_difference(d / "holdings.csv", sim_dir / "holdings.csv", px.iloc[-1], universe, tol)
+            lines += _holdings_section(diff, tol, px.index[-1].date())
     text = "\n".join(lines)
     (d / "comparison.md").write_text(text)
     print(text)

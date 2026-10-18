@@ -250,7 +250,9 @@ def test_compare_real_fills_with_the_model(cfg, signal_market, tmp_path):
                   {"signal_date": "2019-12-13", "ticker": uk, "order_id": 2, "status": "sent"},
                   {"signal_date": "2019-12-13", "ticker": "S002.DE", "order_id": None, "status": "error: HTTP 400"}]
                  ).to_csv(d / "orders_placed.csv", index=False)
-    pd.DataFrame([{"date": "2019-12-21", "total_value": 10050.0}]).to_csv(d / "account.csv", index=False)
+    pd.DataFrame([{"date": "2019-12-21", "total_value": 10050.0},              # Saturday run
+                  {"date": "2019-12-23", "total_value": 10075.0}]                 # Monday resend: mid-week
+                 ).to_csv(d / "account.csv", index=False)
     pd.DataFrame([{"date": "2019-12-20", "equity": 10000.0}]).to_csv(main / "nav.csv", index=False)
     # UBS-style drift: the Practice account bought S003 where the simulation holds S006. S000 differs
     # only by rounding, so it isn't listed.
@@ -267,6 +269,7 @@ def test_compare_real_fills_with_the_model(cfg, signal_market, tmp_path):
     assert trades.loc[uk, "value_GBP"] == pytest.approx(10 * uk_px / 100, abs=0.01)
     text = (d / "comparison.md").read_text()
     assert "2 fills" in text and "| 2019-12-21" in text and "50" in text
+    assert "2019-12-23" not in text                                 # weekday snapshots aren't compared
     last = to_base(close, universe["currency"], fx, "GBP").ffill().iloc[-1]
     diff = t212.holdings_difference(d / "holdings.csv", main / "holdings.csv", last, universe).set_index("ticker")
     assert list(diff.index) == ["S003", "S006", "CASH"]
@@ -276,6 +279,13 @@ def test_compare_real_fills_with_the_model(cfg, signal_market, tmp_path):
     assert diff.loc["CASH", "difference"] == 20
     assert "## Holdings that differ" in text
     assert "Trading 212 only: S003; simulated only: S006" in text
+
+    # Mid-week the Practice account has filled the orders the simulation still has pending: no comparison.
+    pd.DataFrame([{"signal_date": "2019-12-13", "ticker": us, "side": "buy", "shares": 2, "reason": "enter"}]
+                 ).to_csv(main / "pending_orders.csv", index=False)
+    t212.compare(spec, cfg, close, fx, universe)
+    text = (d / "comparison.md").read_text()
+    assert "Not compared now" in text and "Trading 212 only: S003" not in text
 
 
 def test_holdings_section_when_both_accounts_match(tmp_path):
