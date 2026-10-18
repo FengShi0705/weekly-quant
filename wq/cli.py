@@ -135,6 +135,25 @@ def cmd_backtest(cfg):
     print(f"\nWritten to {out}/")
 
 
+def cmd_t212(cfg, args, client=None):
+    from . import t212
+    client = client or t212.Client()
+    spec = cfg["_root"] / args.spec
+    universe = load_universe(cfg)
+    t212.sync(client, spec, universe)
+    if args.retry_rejected:
+        # A mid-week resend needs no prices, and the comparison report is the Saturday run's job.
+        t212.place(client, spec, universe, execute=args.execute, retry_rejected=True)
+        return
+    if not (cfg["data"]["cache_dir"] / "close_local.parquet").exists():
+        download(cfg)                                         # e.g. a fresh machine: the price cache is gone
+    close, volume, fx = load_cached(cfg)
+    print(f"  prices up to {close.index.max().date()}")
+    t212.plan_from_account(client, cfg, spec, close, volume, fx, universe)
+    t212.place(client, spec, universe, execute=args.execute)
+    t212.compare(spec, cfg, close, fx, universe)
+
+
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="wq", description="Weekly global equity strategy")
     ap.add_argument("--config", default="config.yaml")
@@ -169,14 +188,4 @@ def main(argv=None):
         close, volume, fx = load_cached(cfg)
         paper.run(cfg, close, volume, fx, load_universe(cfg), cfg["_root"] / args.spec)
     elif args.cmd == "t212":
-        from . import t212
-        client = t212.Client()
-        spec = cfg["_root"] / args.spec
-        universe = load_universe(cfg)
-        close, volume, fx = load_cached(cfg)
-        t212.sync(client, spec, universe)
-        if not args.retry_rejected:
-            print(f"  prices up to {close.index.max().date()}")
-            t212.plan_from_account(client, cfg, spec, close, volume, fx, universe)
-        t212.place(client, spec, universe, execute=args.execute, retry_rejected=args.retry_rejected)
-        t212.compare(spec, cfg, close, fx, universe)
+        cmd_t212(cfg, args)

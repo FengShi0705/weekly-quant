@@ -1,3 +1,4 @@
+import argparse
 import base64
 import json
 from datetime import date
@@ -5,7 +6,7 @@ from datetime import date
 import pandas as pd
 import pytest
 
-from wq import paper, t212
+from wq import cli, paper, t212
 from wq.data import to_base
 
 INSTRUMENTS = [
@@ -47,6 +48,8 @@ class FakeT212:
             return FakeResponse(self.positions)
         if path == "/equity/orders":
             return FakeResponse(self.open_orders)
+        if path == "/equity/history/orders":
+            return FakeResponse({"items": [], "nextPagePath": None})
         if path == "/equity/account/summary":
             return FakeResponse({"currency": "GBP", "totalValue": self.cash, "cash": {"availableToTrade": self.cash}})
         if path == "/equity/orders/market":
@@ -295,3 +298,24 @@ def test_holdings_section_when_both_accounts_match(tmp_path):
     diff = t212.holdings_difference(tmp_path / "real.csv", tmp_path / "sim.csv", pd.Series({"AAPL": 100.0}), universe)
     assert list(diff["ticker"]) == ["CASH"]
     assert "Both accounts hold the same stocks." in "\n".join(t212._holdings_section(diff, 0.05, "2026-10-23"))
+
+
+def test_resend_works_on_a_fresh_machine_without_prices(cfg, spec, monkeypatch, tmp_path):
+    cfg["_root"], cfg["data"]["cache_dir"] = tmp_path, tmp_path / "empty_cache"
+    monkeypatch.setattr(cli, "load_universe", lambda c: UNIVERSE)
+    downloads = []
+    monkeypatch.setattr(cli, "download", lambda c: downloads.append(1) or pytest.fail("stop"))
+    pd.DataFrame([{"signal_date": "2026-10-16", "sent_on": "2026-10-18", "ticker": "AAPL", "t212_ticker": "AAPL_US_EQ",
+                   "quantity": 1.0, "order_id": None, "status": "error: HTTP 400: insufficient funds"}]
+                 ).to_csv(spec.parent / "t212_practice" / "orders_placed.csv", index=False)
+    fake = FakeT212(cash=500)
+    args = argparse.Namespace(spec="paper/strategies.yaml", execute=True, retry_rejected=True)
+    cli.cmd_t212(cfg, args, client=client(fake))
+    assert [c[2]["ticker"] for c in fake.calls if c[0] == "POST"] == ["AAPL_US_EQ"]
+    assert not downloads and not (spec.parent / "t212_practice" / "comparison.md").exists()
+
+    # The weekly run needs prices: with no cache it downloads them first.
+    with pytest.raises(pytest.fail.Exception):
+        cli.cmd_t212(cfg, argparse.Namespace(spec="paper/strategies.yaml", execute=False, retry_rejected=False),
+                     client=client(FakeT212(cash=500)))
+    assert downloads == [1]
