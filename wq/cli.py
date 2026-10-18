@@ -148,6 +148,8 @@ def main(argv=None):
     pp.add_argument("--spec", default="paper/strategies.yaml")
     tp = sub.add_parser("t212", help="mirror the paper strategy's orders in a Trading 212 Practice account")
     tp.add_argument("--execute", action="store_true", help="send the orders (default: dry run)")
+    tp.add_argument("--retry-rejected", action="store_true",
+                    help="resend only this week's orders that Trading 212 rejected (HTTP 400)")
     tp.add_argument("--spec", default="paper/strategies.yaml")
     args = ap.parse_args(argv)
     cfg = load_config(args.config)
@@ -171,4 +173,4 @@ def main(argv=None):
         client = t212.Client()
         spec = cfg["_root"] / args.spec
         t212.sync(client, spec)
-        t212.place(client, spec, load_universe(cfg), execute=args.execute)
+        t212.place(client, spec, load_universe(cfg), execute=args.execute, retry_rejected=args.retry_rejected)

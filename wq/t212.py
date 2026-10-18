@@ -11,6 +11,7 @@ State is kept next to the paper strategy, in paper/t212_practice/:
   account.csv         weekly account value from Trading 212
 """
 import base64
+import math
 import os
 import re
 import time
@@ -23,6 +24,7 @@ import yaml
 DEMO = "https://demo.trading212.com/api/v0"
 YAHOO_SUFFIX = re.compile(r"\.(L|DE|PA|AS|MC|MI|SW|CO|ST|HE|TO|T|HK)$")
 T212_CCY = {"GBp": "GBX"}
+PRECISION_ERROR = re.compile(r"quantity-precision-mismatch.*?invalid quantity precision (\d+)", re.S)
 
 
 class Client:
@@ -61,6 +63,9 @@ class Client:
 
     def summary(self):
         return self._call("GET", "/equity/account/summary")
+
+    def pending_orders(self):
+        return self._call("GET", "/equity/orders")
 
     def market_order(self, ticker, quantity):
         # Not idempotent: never retry this call automatically.
@@ -144,8 +149,66 @@ def sync(client, spec_path):
     print(f"  Practice account value {s.get('totalValue')} {s.get('currency')}")
 
 
-def place(client, spec_path, universe, execute=False):
-    """Send the mirrored strategy's pending orders to the Practice account (sells first)."""
+def _send(client, ticker, qty):
+    """Send one market order; returns (order_id, quantity sent, status).
+
+    Instruments allow different numbers of decimals. If Trading 212 rejects the quantity's precision
+    (HTTP 400, so no order was created), resend once, truncated to the precision it reports.
+    """
+    try:
+        return client.market_order(ticker, qty).get("id"), qty, "sent"
+    except RuntimeError as e:
+        m = PRECISION_ERROR.search(str(e))
+        if not m:
+            return None, qty, f"error: {e}"
+        n = int(m.group(1))
+        cut = math.trunc(qty * 10 ** n) / 10 ** n
+        if cut == 0:
+            return None, qty, f"error: {e}"
+        try:
+            return client.market_order(ticker, cut).get("id"), cut, "sent"
+        except RuntimeError as e2:
+            return None, cut, f"error: {e2}"
+
+
+def _resend_rejected(client, placed_path, signal, execute):
+    """Resend this week's orders that Trading 212 explicitly rejected (HTTP 400, no order id).
+
+    A 400 means no order was created, so resending can't duplicate one. Tickers that already have an
+    open order are skipped as a further guard.
+    """
+    placed = pd.read_csv(placed_path)
+    rejected = ((placed["signal_date"].astype(str) == signal) & placed["order_id"].isna()
+                & placed["status"].astype(str).str.startswith("error: HTTP 400"))
+    if not rejected.any():
+        print(f"  no rejected orders for signal {signal} to resend")
+        return []
+    open_tickers = {o.get("ticker") or (o.get("instrument") or {}).get("ticker") for o in client.pending_orders()}
+    rows = []
+    for i in placed.index[rejected]:
+        tk, qty = placed.at[i, "t212_ticker"], float(placed.at[i, "quantity"])
+        if tk in open_tickers:
+            status, oid = "skipped: an open order already exists", None
+        elif not execute:
+            status, oid = "dry run (resend)", None
+        else:
+            oid, qty, status = _send(client, tk, qty)
+            placed.loc[i, ["order_id", "quantity", "sent_on"]] = [oid, qty, str(date.today())]
+        if execute:
+            placed.loc[i, "status"] = status
+        rows.append({"ticker": placed.at[i, "ticker"], "t212_ticker": tk, "quantity": qty, "status": status})
+    print(pd.DataFrame(rows).to_string(index=False))
+    if execute:
+        placed.to_csv(placed_path, index=False)
+    return rows
+
+
+def place(client, spec_path, universe, execute=False, retry_rejected=False):
+    """Send the mirrored strategy's pending orders to the Practice account (sells first).
+
+    Each week's orders are sent once. With retry_rejected, only orders Trading 212 explicitly
+    rejected for that week are sent again.
+    """
     spec = yaml.safe_load(spec_path.read_text())
     strategy = spec.get("t212_practice")
     if not strategy:
@@ -160,6 +223,8 @@ def place(client, spec_path, universe, execute=False):
     signal = str(pending["signal_date"].iloc[0])
     placed_path = d / "orders_placed.csv"
     if placed_path.exists() and signal in set(pd.read_csv(placed_path)["signal_date"].astype(str)):
+        if retry_rejected:
+            return _resend_rejected(client, placed_path, signal, execute)
         print(f"  orders for signal {signal} were already sent; not sending again")
         return []
 
@@ -184,11 +249,7 @@ def place(client, spec_path, universe, execute=False):
         elif not execute:
             row["status"] = "dry run"
         else:
-            try:
-                row["order_id"] = client.market_order(tk, qty).get("id")
-                row["status"] = "sent"
-            except RuntimeError as e:
-                row["status"] = f"error: {e}"
+            row["order_id"], row["quantity"], row["status"] = _send(client, tk, qty)
         rows.append(row)
     df = pd.DataFrame(rows)
     print(df[["ticker", "t212_ticker", "quantity", "status"]].to_string(index=False))
