@@ -1,0 +1,16 @@
+signal_date,sent_on,ticker,t212_ticker,quantity,order_id,status
+2026-10-16,2026-10-18,AMAT,AMAT_US_EQ,2.1187,56650213076.0,sent
+2026-10-16,2026-10-18,AMD,AMD_US_EQ,1.64,56650213078.0,sent
+2026-10-16,2026-10-18,BARC.L,BARCl_EQ,151.0073,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 2"",""traceId"":""09fd9827930d3cb5306f20563281f0a5""}"
+2026-10-16,2026-10-18,BAYN.DE,BAYNd_EQ,17.3945,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""31ef6460021f0cc34ba99f898aa9c945""}"
+2026-10-16,2026-10-18,BBVA.MC,BBVAe_EQ,33.3632,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""142056ad09dd408ec39e9a41ccbc8e2f""}"
+2026-10-16,2026-10-18,BNP.PA,BNPp_EQ,8.636,56650213080.0,sent
+2026-10-16,2026-10-18,IFX.DE,IFXd_EQ,14.7615,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""fbeeb75ef995ca365a842e14c1891661""}"
+2026-10-16,2026-10-18,INGA.AS,INGAa_EQ,25.7272,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""9650d12844c6fac0a62d14806464229b""}"
+2026-10-16,2026-10-18,LRCX,LRCX_US_EQ,3.2855,56650213082.0,sent
+2026-10-16,2026-10-18,MU,MU_US_EQ,0.9867,56650213084.0,sent
+2026-10-16,2026-10-18,PANW,PANW_US_EQ,2.5356,56650213086.0,sent
+2026-10-16,2026-10-18,RR.L,RRl_EQ,48.3735,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""c2cf73900a3f12472e67bd667e007934""}"
+2026-10-16,2026-10-18,STAN.L,STANl_EQ,30.7161,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""5d32e41c375f95379a460fe1e39b8b88""}"
+2026-10-16,2026-10-18,TXN,TXN_US_EQ,3.1365,56650213088.0,sent
+2026-10-16,2026-10-18,UBSG.SW,UBSGs_EQ,18.0221,,"error: HTTP 400: {""type"":""/api-errors/quantity-precision-mismatch"",""title"":""Error while placing the order"",""status"":400,""detail"":""invalid quantity precision 3"",""traceId"":""645a557326356531ac8d7cfacb96f9af""}"
