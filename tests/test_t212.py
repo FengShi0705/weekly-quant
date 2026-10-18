@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from wq import paper, t212
+from wq.data import to_base
 
 INSTRUMENTS = [
     {"ticker": "AAPL_US_EQ", "shortName": "AAPL", "currencyCode": "USD", "type": "STOCK"},
@@ -173,6 +174,19 @@ def test_account_holdings_maps_positions_and_cash():
     assert shares == {"AAPL": 2.5} and cash == 123.45 and unmanaged == {"XYZ_US_EQ": 1.0}
 
 
+def test_sync_records_the_real_holdings(spec):
+    fake = FakeT212(positions=[{"instrument": {"ticker": "AAPL_US_EQ"}, "quantity": 2.5},
+                               {"ticker": "XYZ_US_EQ", "quantity": 1}], cash=123.45)
+    t212.sync(client(fake), spec, UNIVERSE)
+    d = spec.parent / "t212_practice"
+    held = pd.read_csv(d / "holdings.csv").set_index("ticker")["shares"].to_dict()
+    assert held == {"AAPL": 2.5, "XYZ_US_EQ": 1.0, "CASH": 123.45}
+    assert len(pd.read_csv(d / "account.csv")) == 1
+    t212.sync(client(fake), spec, UNIVERSE)                       # a second run the same day replaces the row
+    assert len(pd.read_csv(d / "account.csv")) == 1
+    assert [c[1] for c in fake.calls].count("/equity/account/summary") == 2   # one summary request per run
+
+
 def test_practice_orders_are_planned_from_the_real_account(cfg, signal_market, tmp_path):
     close, volume, fx, universe = signal_market
     cfg["data"]["cache_dir"] = tmp_path / "no_cache"
@@ -238,6 +252,10 @@ def test_compare_real_fills_with_the_model(cfg, signal_market, tmp_path):
                  ).to_csv(d / "orders_placed.csv", index=False)
     pd.DataFrame([{"date": "2019-12-21", "total_value": 10050.0}]).to_csv(d / "account.csv", index=False)
     pd.DataFrame([{"date": "2019-12-20", "equity": 10000.0}]).to_csv(main / "nav.csv", index=False)
+    # UBS-style drift: the Practice account bought S003 where the simulation holds S006. S000 differs
+    # only by rounding, so it isn't listed.
+    paper.write_holdings(d / "holdings.csv", {us: 2.0, "S003": 5.0}, 100.0)
+    paper.write_holdings(main / "holdings.csv", {us: 2.05, "S006": 3.0}, 80.0)
 
     trades = t212.compare(spec, cfg, close, fx, universe).set_index("ticker")
     assert trades.loc[us, "vs_close_bps"] == pytest.approx(10, abs=0.1)
@@ -249,3 +267,21 @@ def test_compare_real_fills_with_the_model(cfg, signal_market, tmp_path):
     assert trades.loc[uk, "value_GBP"] == pytest.approx(10 * uk_px / 100, abs=0.01)
     text = (d / "comparison.md").read_text()
     assert "2 fills" in text and "| 2019-12-21" in text and "50" in text
+    last = to_base(close, universe["currency"], fx, "GBP").ffill().iloc[-1]
+    diff = t212.holdings_difference(d / "holdings.csv", main / "holdings.csv", last, universe).set_index("ticker")
+    assert list(diff.index) == ["S003", "S006", "CASH"]
+    assert list(diff["held in"].iloc[:2]) == ["Trading 212 only", "simulated only"]
+    assert diff.loc["S003", "difference"] == pytest.approx(5 * last["S003"], abs=0.01)
+    assert diff.loc["S006", "difference"] == pytest.approx(-3 * last["S006"], abs=0.01)
+    assert diff.loc["CASH", "difference"] == 20
+    assert "## Holdings that differ" in text
+    assert "Trading 212 only: S003; simulated only: S006" in text
+
+
+def test_holdings_section_when_both_accounts_match(tmp_path):
+    universe = pd.DataFrame({"name": ["Apple"]}, index=["AAPL"])
+    paper.write_holdings(tmp_path / "real.csv", {"AAPL": 10.0}, 50.0)
+    paper.write_holdings(tmp_path / "sim.csv", {"AAPL": 10.2}, 50.0)
+    diff = t212.holdings_difference(tmp_path / "real.csv", tmp_path / "sim.csv", pd.Series({"AAPL": 100.0}), universe)
+    assert list(diff["ticker"]) == ["CASH"]
+    assert "Both accounts hold the same stocks." in "\n".join(t212._holdings_section(diff, 0.05, "2026-10-23"))

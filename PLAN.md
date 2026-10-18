@@ -395,7 +395,10 @@ report shows each real fill's cost against the model's estimate:
 - price paid vs that day's close, in the stock's own currency
 - plus Trading 212's actual fees, by name
 
-It also shows the Practice account's value next to the simulated one. That is the evidence for the
+It also shows the Practice account's value next to the simulated one, and the holdings that differ
+between them. Once the accounts diverge (say an order was rejected and a different stock filled the slot
+the next week), they can hold different stocks for months, so part of the value gap is then different
+holdings, not costs. The holdings table shows how much. The per-fill costs are the evidence for the
 go-live cost rule below.
 
 **Review rules, set before any results** (review after 8–12 weeks, mid-December 2026 to mid-January 2027):

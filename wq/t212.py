@@ -14,6 +14,7 @@ State is kept in paper/t212_practice/:
   orders_placed.csv   every order sent (or skipped), with the Trading 212 order id
   fills.csv           the fills Trading 212 reported for those orders, with each fee by name
   account.csv         account value per run
+  holdings.csv        the account's latest positions (Yahoo tickers) and free cash, like a paper holdings file
   comparison.md/.csv  real fills and account value next to the simulated ledger
 """
 import base64
@@ -122,14 +123,19 @@ def map_tickers(universe, instruments, overrides=None):
     return mapping, problems
 
 
+def _overrides(spec_path):
+    path = spec_path.parent / "t212_overrides.yaml"
+    return (yaml.safe_load(path.read_text()) or {}) if path.exists() else {}
+
+
 def _state_dir(spec_path):
     d = spec_path.parent / "t212_practice"
     d.mkdir(parents=True, exist_ok=True)
     return d
 
 
-def sync(client, spec_path):
-    """Record fills for orders we placed, and this week's account value."""
+def sync(client, spec_path, universe):
+    """Record fills for orders we placed, this week's account value and the account's positions."""
     d = _state_dir(spec_path)
     placed_path = d / "orders_placed.csv"
     if placed_path.exists():
@@ -164,15 +170,20 @@ def sync(client, spec_path):
         old = pd.read_csv(path)
         row = pd.concat([old[old["date"].astype(str) != str(date.today())], row], ignore_index=True)
     row.to_csv(path, index=False)
-    print(f"  Practice account value {s.get('totalValue')} {s.get('currency')}")
+    shares, cash, unmanaged = account_holdings(client, universe, _overrides(spec_path), summary=s)
+    paper.write_holdings(d / "holdings.csv", shares | unmanaged, cash)
+    print(f"  Practice account value {s.get('totalValue')} {s.get('currency')}, {len(shares | unmanaged)} positions")
 
 
 def _position_ticker(p):
     return p.get("ticker") or (p.get("instrument") or {}).get("ticker")
 
 
-def account_holdings(client, universe, overrides=None):
-    """The Practice account's positions as {yahoo_ticker: shares}, its free cash, and anything unmapped."""
+def account_holdings(client, universe, overrides=None, summary=None):
+    """The Practice account's positions as {yahoo_ticker: shares}, its free cash, and anything unmapped.
+
+    summary: an account summary already fetched in this run, to save a request.
+    """
     mapping, _ = map_tickers(universe, client.instruments(), overrides)
     to_yahoo = {v: k for k, v in mapping.items()}
     shares, unmanaged = {}, {}
@@ -182,7 +193,7 @@ def account_holdings(client, universe, overrides=None):
             shares[to_yahoo[tk]] = qty
         elif qty:
             unmanaged[tk] = qty
-    cash = float((client.summary().get("cash") or {}).get("availableToTrade", 0.0))
+    cash = float(((summary or client.summary()).get("cash") or {}).get("availableToTrade", 0.0))
     return shares, cash, unmanaged
 
 
@@ -204,9 +215,7 @@ def plan_from_account(client, cfg, spec_path, close_local, volume, fx_usd, unive
     c = paper.strategy_configs(cfg, spec_path)[strategy]
     c["paths"]["reports"] = d / "reports"
     c["paper_dir"] = d
-    overrides_path = spec_path.parent / "t212_overrides.yaml"
-    overrides = yaml.safe_load(overrides_path.read_text()) if overrides_path.exists() else {}
-    shares, cash, unmanaged = account_holdings(client, universe, overrides)
+    shares, cash, unmanaged = account_holdings(client, universe, _overrides(spec_path))
     if unmanaged:
         print(f"  positions outside the strategy universe, left alone: {unmanaged}")
     print(f"  planning from the Practice account: {len(shares)} positions, {cash:,.2f} free cash")
@@ -297,10 +306,8 @@ def place(client, spec_path, universe, execute=False, retry_rejected=False):
         print(f"  orders for signal {signal} were already sent; not sending again")
         return []
 
-    overrides_path = spec_path.parent / "t212_overrides.yaml"
-    overrides = yaml.safe_load(overrides_path.read_text()) if overrides_path.exists() else {}
     mapping, problems = map_tickers(universe.loc[universe.index.isin(pending["ticker"])], client.instruments(),
-                                    overrides)
+                                    _overrides(spec_path))
     held = {_position_ticker(p): float(p["quantity"]) for p in client.positions()}
 
     rows = []
@@ -341,26 +348,108 @@ def _real_value(row):
     return best if abs(best / net - 1) < 0.05 else net
 
 
-def compare(spec_path, cfg, close_local, fx_usd, universe):
-    """Real Practice fills and account value next to what the simulation assumes.
+def holdings_difference(real_path, sim_path, price, universe, tol=0.05):
+    """Positions that differ between the Practice account and the simulated ledger, valued at `price`.
+
+    Lists every stock held in only one account, and stocks in both whose share counts are more than
+    `tol` apart (small gaps from fill prices and quantity rounding are normal), then cash.
+    """
+    real, real_cash = weekly.read_holdings(real_path, 0)
+    sim, sim_cash = weekly.read_holdings(sim_path, 0)
+    rows = []
+    for t in sorted(set(real) | set(sim)):
+        a, b = real.get(t, 0.0), sim.get(t, 0.0)
+        if a and b and abs(a - b) <= tol * max(a, b):
+            continue
+        p = price.get(t, float("nan"))
+        rows.append({"ticker": t, "name": universe["name"].get(t, ""),
+                     "held in": "both" if a and b else "Trading 212 only" if a else "simulated only",
+                     "Trading 212 shares": round(a, 4), "simulated shares": round(b, 4),
+                     "Trading 212 value": round(a * p, 2), "simulated value": round(b * p, 2),
+                     "difference": round((a - b) * p, 2)})
+    rows.append({"ticker": "CASH", "name": "", "held in": "", "Trading 212 shares": None, "simulated shares": None,
+                 "Trading 212 value": round(real_cash, 2), "simulated value": round(sim_cash, 2),
+                 "difference": round(real_cash - sim_cash, 2)})
+    return pd.DataFrame(rows)
+
+
+def _holdings_section(diff, tol, day):
+    stocks = diff[diff["ticker"] != "CASH"]
+    only = {k: ", ".join(stocks.loc[stocks["held in"] == k, "ticker"]) or "none"
+            for k in ("Trading 212 only", "simulated only")}
+    lines = ["## Holdings that differ", "",
+             f"Valued at the {day} close. Lists stocks held in only one account, and stocks in both whose share "
+             f"counts are more than {tol:.0%} apart (smaller gaps from fill prices and rounding are left out).", ""]
+    if stocks.empty:
+        lines += ["Both accounts hold the same stocks.", ""]
+    else:
+        n_only = int((stocks["held in"] != "both").sum())
+        lines += [f"**{n_only} stocks held in only one account** (Trading 212 only: {only['Trading 212 only']}; "
+                  f"simulated only: {only['simulated only']}). At the same prices these rows, cash included, "
+                  f"come to **{diff['difference'].sum():+,.2f}**: that much of the gap between the two account "
+                  "values is down to holding different things. The rest comes from small share-count gaps and "
+                  "Trading 212's own prices.", ""]
+    table = diff.astype(object).where(diff.notna(), None)              # blank, not "nan", for cash shares
+    return lines + [table.to_markdown(index=False, missingval=""), ""]
+
+
+def compare(spec_path, cfg, close_local, fx_usd, universe, tol=0.05):
+    """Real Practice fills, account value and holdings next to the simulated ledger's.
 
     Per fill: price paid vs that stock's close on the fill day (the simulated/backtest fill price), and
-    Trading 212's actual fees vs the cost model's estimate for the same trade. Plus the Practice
-    account's value next to the simulated ledger's. Writes comparison.csv and comparison.md.
+    Trading 212's actual fees vs the cost model's estimate for the same trade. Then the Practice
+    account's value next to the simulated ledger's, and the holdings that differ between them.
+    Writes comparison.csv (per fill) and comparison.md.
     """
     spec = yaml.safe_load(spec_path.read_text())
     strategy = spec.get("t212_practice")
     d = _state_dir(spec_path)
-    if not (d / "fills.csv").exists():
-        print("  no Trading 212 fills yet to compare")
-        return None
+    base = cfg["account"]["base_currency"]
+    px = to_base(close_local, universe["currency"], fx_usd, base).ffill()
+    trades = _fill_costs(d, cfg, close_local, px, universe) if (d / "fills.csv").exists() else pd.DataFrame()
+    trades.to_csv(d / "comparison.csv", index=False)
+
+    lines = [f"# Trading 212 Practice vs simulation ({strategy})", ""]
+    if len(trades):
+        w = trades[f"value_{base}"]
+        avg = lambda c: (trades[c] * w).sum() / w.sum()
+        real, model = avg("real_total_bps"), avg("model_cost_bps")
+        lines += [f"**{len(trades)} fills.** Value-weighted cost per trade: real **{real:.0f} bps** "
+                  f"(price vs the day's close {avg('vs_close_bps'):+.0f} bps + fees {avg('real_fees_bps'):.0f} bps) "
+                  f"against the model's **{model:.0f} bps**: {real / model:.1f}x the model "
+                  "(the go-live rule asks for no more than about 2x).", "",
+                  "Price vs close is noisy for any single trade (orders sent at the weekend fill at the "
+                  "open, the model assumes the close); only the average over many trades means much.", "",
+                  trades.drop(columns=["fees_detail"]).to_markdown(index=False), ""]
+    else:
+        lines += ["_No Trading 212 fills with a closing price yet._", ""]
+    sim_dir = spec_path.parent / strategy
+    if (d / "account.csv").exists() and (sim_dir / "nav.csv").exists():
+        acct = pd.read_csv(d / "account.csv", parse_dates=["date"]).sort_values("date")
+        sim = pd.read_csv(sim_dir / "nav.csv", parse_dates=["date"]).sort_values("date")
+        both = pd.merge_asof(acct, sim[["date", "equity"]], on="date", direction="backward")
+        both = both.rename(columns={"total_value": "Trading 212", "equity": "simulated"})
+        both["difference"] = both["Trading 212"] - both["simulated"]
+        both["date"] = both["date"].dt.date
+        lines += ["## Account value", "",
+                  both[["date", "Trading 212", "simulated", "difference"]].round(2).to_markdown(index=False), ""]
+    if (d / "holdings.csv").exists() and (sim_dir / "holdings.csv").exists():
+        diff = holdings_difference(d / "holdings.csv", sim_dir / "holdings.csv", px.iloc[-1], universe, tol)
+        lines += _holdings_section(diff, tol, px.index[-1].date())
+    text = "\n".join(lines)
+    (d / "comparison.md").write_text(text)
+    print(text)
+    return trades
+
+
+def _fill_costs(d, cfg, close_local, px, universe):
+    """Each real fill's cost (price vs that day's close, plus fees) next to the cost model's estimate."""
     base = cfg["account"]["base_currency"]
     fills = pd.read_csv(d / "fills.csv")
     placed = pd.read_csv(d / "orders_placed.csv").dropna(subset=["order_id"])
     placed["order_id"] = placed["order_id"].astype("int64")
     fills = fills.merge(placed[["order_id", "signal_date", "ticker"]].rename(columns={"ticker": "yahoo"}),
                         on="order_id", how="left")
-    px = to_base(close_local, universe["currency"], fx_usd, base).ffill()
     local = close_local.ffill()
 
     rows = []
@@ -389,32 +478,4 @@ def compare(spec_path, cfg, close_local, fx_usd, universe):
                      "vs_close_bps": round(timing, 1), "real_fees_bps": round(fees / value * 1e4, 1),
                      "real_total_bps": round(timing + fees / value * 1e4, 1),
                      "model_cost_bps": round(model / value * 1e4, 1), "fees_detail": f.get("fees_detail", "")})
-    trades = pd.DataFrame(rows)
-    trades.to_csv(d / "comparison.csv", index=False)
-
-    lines = [f"# Trading 212 Practice vs simulation ({strategy})", ""]
-    if len(trades):
-        w = trades[f"value_{base}"]
-        avg = lambda c: (trades[c] * w).sum() / w.sum()
-        real, model = avg("real_total_bps"), avg("model_cost_bps")
-        lines += [f"**{len(trades)} fills.** Value-weighted cost per trade: real **{real:.0f} bps** "
-                  f"(price vs the day's close {avg('vs_close_bps'):+.0f} bps + fees {avg('real_fees_bps'):.0f} bps) "
-                  f"against the model's **{model:.0f} bps**: {real / model:.1f}x the model "
-                  "(the go-live rule asks for no more than about 2x).", "",
-                  "Price vs close is noisy for any single trade (orders sent at the weekend fill at the "
-                  "open, the model assumes the close); only the average over many trades means much.", "",
-                  trades.drop(columns=["fees_detail"]).to_markdown(index=False), ""]
-    sim_nav = spec_path.parent / strategy / "nav.csv"
-    if (d / "account.csv").exists() and sim_nav.exists():
-        acct = pd.read_csv(d / "account.csv", parse_dates=["date"]).sort_values("date")
-        sim = pd.read_csv(sim_nav, parse_dates=["date"]).sort_values("date")
-        both = pd.merge_asof(acct, sim[["date", "equity"]], on="date", direction="backward")
-        both = both.rename(columns={"total_value": "Trading 212", "equity": "simulated"})
-        both["difference"] = both["Trading 212"] - both["simulated"]
-        both["date"] = both["date"].dt.date
-        lines += ["## Account value", "",
-                  both[["date", "Trading 212", "simulated", "difference"]].round(2).to_markdown(index=False), ""]
-    text = "\n".join(lines)
-    (d / "comparison.md").write_text(text)
-    print(text)
-    return trades
+    return pd.DataFrame(rows)

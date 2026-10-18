@@ -174,7 +174,7 @@ def main(argv=None):
         spec = cfg["_root"] / args.spec
         universe = load_universe(cfg)
         close, volume, fx = load_cached(cfg)
-        t212.sync(client, spec)
+        t212.sync(client, spec, universe)
         if not args.retry_rejected:
             print(f"  prices up to {close.index.max().date()}")
             t212.plan_from_account(client, cfg, spec, close, volume, fx, universe)

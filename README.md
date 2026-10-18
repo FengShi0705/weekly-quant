@@ -50,7 +50,8 @@ compares the strategies. A scheduled cloud run does this every Saturday.
 Trading 212's API. It can only reach the Practice (demo) server and is a dry run unless you pass
 `--execute`. Each week it plans orders from the account's real positions and cash, so any drift from the
 simulated ledger is corrected at the next run. It also writes `paper/t212_practice/comparison.md`: real
-fill prices and fees next to the cost model, and the account's value next to the simulated ledger's.
+fill prices and fees next to the cost model, the account's value next to the simulated ledger's, and the
+holdings that differ between the two.
 `--retry-rejected` resends only the latest week's orders that Trading 212 rejected (for example for lack of
 free cash before the sells filled). Credentials: Practice API keys stored as a network secret on the cloud environment for
 `demo.trading212.com` (type Username and password: username = API key, password = API secret), or as the
