@@ -53,6 +53,15 @@ reported for all arms but **do not decide** this gate: 10 years of weekly return
 strategies whose returns are this correlated (see `research_notes/.../validation_overfitting.md`).
 No arm is adopted for trading from this run; adoption needs the full protocol in the design report.
 
+## Erratum (19 Oct 2026, after run 1; the decision rule is unchanged)
+
+"Stage 1 sees exactly LightGBM's inputs" above is wrong. LightGBM uses only the 15 ranked features;
+the transformer also gets learned country, sector and currency embeddings, which is extra
+information. Run 1 passed the gate (IC 0.033 vs 0.019, paired t 2.2), so how much of that comes from
+the embeddings rather than the architecture and loss is tested as a separate trial with the
+categories blanked (`--no-categories`). The 10-seed re-check required above uses the run-1
+configuration unchanged.
+
 ## Known limits
 
 - The 2016–2026 period has been used to tune LightGBM's settings, and the 2024–2026 holdout has been

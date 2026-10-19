@@ -43,6 +43,8 @@ class Stage1Config:
     min_train_weeks: int = 156
     seeds: tuple = (0, 1, 2)
     workers: int = 4
+    use_categories: bool = True     # False: country, sector and currency ids are blanked (ablation)
+    save_dir: str = ""              # if set, each refit's model is saved there (for Stage 2)
     features: list = field(default_factory=lambda: list(FEATURES))
 
 
@@ -240,6 +242,8 @@ def _job(args):
     window, fit_w, val_w, chunk = _PLAN[plan_i]
     _, best_ep = _train(fit_w, n_feat, vocab, cfg, seed * 1000 + plan_i, val_weeks=val_w)
     model, _ = _train(window, n_feat, vocab, cfg, seed * 1000 + plan_i, epochs=max(best_ep, 1))
+    if cfg.save_dir:
+        torch.save(model.state_dict(), f"{cfg.save_dir}/refit{plan_i:03d}_seed{seed}.pt")
     scores = _score(model, chunk)
     rows = [pd.DataFrame({"date": w.date, "ticker": w.tickers, "tx": s, "seed": seed})
             for w, s in zip(chunk, scores)]
@@ -253,6 +257,8 @@ def walk_forward_tx(weeks, vocab, pred_dates, cfg, verbose=True):
     """Stage 1 scores for pred_dates: DataFrame indexed by (date, ticker) with column tx (the
     seed-averaged, per-week z-scored score). Also returns a log of epochs chosen per refit and seed."""
     global _PLAN
+    if not cfg.use_categories:
+        weeks = [Week(w.date, w.week, w.tickers, w.x, np.zeros_like(w.cat), w.y) for w in weeks]
     _PLAN = refit_plan(weeks, pred_dates, cfg)
     n_feat = weeks[0].x.shape[1]
     jobs = [(i, s, n_feat, vocab, cfg) for i in range(len(_PLAN)) for s in cfg.seeds]

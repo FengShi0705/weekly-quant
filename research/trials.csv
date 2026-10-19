@@ -1,0 +1,2 @@
+run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
+2026-10-19T21:13:37+00:00,1,run1_main_3seeds,51ca1f6705,3,561,0.03287450254393,0.0188473307324382,2.227537452490613,True,"first pre-registered run, 3 seeds"

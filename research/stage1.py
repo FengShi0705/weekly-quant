@@ -55,6 +55,10 @@ def nw_t(x, lags=4):
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--note", default="")
+    ap.add_argument("--tag", default="main", help="results go to research/results/stage1/<tag>")
+    ap.add_argument("--seeds", type=int, default=3)
+    ap.add_argument("--no-categories", action="store_true", help="ablation: blank country/sector/currency")
+    ap.add_argument("--save-models", action="store_true", help="keep each refit's model (gitignored)")
     ap.add_argument("--smoke", action="store_true", help="tiny run on the last year to check the pipeline; "
                     "writes to research/results/stage1_smoke and skips the trial ledger")
     args = ap.parse_args()
@@ -66,8 +70,13 @@ def main():
     dates = [d for d in cal.index if d >= start and pd.notna(cal.loc[d, "exec_date"])]
     lgb = pd.read_parquet(cfg["paths"]["reports"] / "backtest" / "scores.parquet")
 
-    scfg = deep.Stage1Config()
-    out = OUT
+    scfg = dataclasses.replace(deep.Stage1Config(), seeds=tuple(range(args.seeds)),
+                               use_categories=not args.no_categories)
+    out = OUT / args.tag
+    if args.save_models:
+        models = ROOT / "research" / "models" / f"stage1_{args.tag}"
+        models.mkdir(parents=True, exist_ok=True)
+        scfg = dataclasses.replace(scfg, save_dir=str(models))
     if args.smoke:
         scfg = dataclasses.replace(scfg, seeds=(0,), max_epochs=2, patience=1)
         dates, out = dates[-52:], OUT.parent / "stage1_smoke"
@@ -119,8 +128,11 @@ def main():
               "config": dataclasses.asdict(scfg), "ic": ic_summary, "gate": gate, "performance": perf,
               "epochs": log["epochs"].describe().to_dict()}
     (out / "summary.json").write_text(json.dumps(result, indent=2, default=float))
-    cfg_hash = hashlib.sha1(json.dumps(dataclasses.asdict(scfg), sort_keys=True).encode()).hexdigest()[:10]
-    row = pd.DataFrame([{"run_at": result["run_at"], "stage": 1, "config": cfg_hash, "seeds": len(scfg.seeds),
+    cfg_hash = hashlib.sha1(json.dumps({k: v for k, v in dataclasses.asdict(scfg).items()
+                                        if k not in ("seeds", "workers", "save_dir")}, sort_keys=True,
+                                       default=str).encode()).hexdigest()[:10]
+    row = pd.DataFrame([{"run_at": result["run_at"], "stage": 1, "tag": args.tag, "config": cfg_hash,
+                         "seeds": len(scfg.seeds),
                          "weeks": len(ic), "ic_tx": ic_summary["tx"]["mean"], "ic_lgbm": ic_summary["lgbm_ml"]["mean"],
                          "gate_t": gate["nw_t"], "gate_pass": gate["pass"], "note": args.note}])
     if not args.smoke:
