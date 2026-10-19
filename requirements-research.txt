@@ -1,0 +1,1 @@
+torch>=2.4   # research only (wq/deep.py); the CPU build is enough

@@ -113,6 +113,7 @@ def cmd_backtest(cfg):
         r.to_csv(out / f"weekly_{k}.csv")
         trades.to_csv(out / f"trades_{k}.csv", index=False)
     res["ic"].to_csv(out / "ic_weekly.csv")
+    res["scores"].to_parquet(out / "scores.parquet")              # per-stock scores, for research comparisons
     res["by_year"].to_csv(out / "by_year.csv")
     (out / "summary.json").write_text(json.dumps(res["summary"], indent=2, default=float))
     _plot(out, res, cfg)

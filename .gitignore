@@ -5,3 +5,4 @@ data/cache/
 /reports/
 /holdings.csv
 .pytest_cache/
+research/results/stage1_smoke/
