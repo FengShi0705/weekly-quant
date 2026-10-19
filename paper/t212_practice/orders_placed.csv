@@ -13,4 +13,4 @@ signal_date,sent_on,ticker,t212_ticker,quantity,order_id,status
 2026-10-16,2026-10-18,RR.L,RRl_EQ,48.373,56650213100.0,sent
 2026-10-16,2026-10-18,STAN.L,STANl_EQ,30.716,56650213102.0,sent
 2026-10-16,2026-10-18,TXN,TXN_US_EQ,3.1365,56650213088.0,sent
-2026-10-16,2026-10-18,UBSG.SW,UBSGs_EQ,18.022,,"error: HTTP 400: {""type"":""/api-errors/insufficient-free-for-stocks-buy"",""title"":""Error while placing the order"",""status"":400,""detail"":""Insufficient funds"",""traceId"":""ea42e0191957faa715373cf6036b18fc""}"
+2026-10-16,2026-10-19,UBSG.SW,UBSGs_EQ,18.022,56750667427.0,sent
