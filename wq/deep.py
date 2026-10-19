@@ -79,7 +79,9 @@ def _torch():
     return torch
 
 
-def make_model(n_feat, vocab_sizes, cfg):
+def make_model(n_feat, vocab_sizes, cfg, two_heads=False):
+    """two_heads: also a return head, kept on the Stage 1 ranking loss in Stages 2-3 while the main
+    head becomes the holdings- and cost-aware policy score."""
     torch = _torch()
     nn = torch.nn
 
@@ -110,15 +112,26 @@ def make_model(n_feat, vocab_sizes, cfg):
             self.blocks = nn.ModuleList([Block() for _ in range(cfg.blocks)])
             self.ln = nn.LayerNorm(cfg.d_model)
             self.head = nn.Linear(cfg.d_model, 1)
+            self.ret_head = nn.Linear(cfg.d_model, 1) if two_heads else None
 
-        def forward(self, x, cat, pad, acct=None):
+        def load_stage1(self, state):
+            """Start from a Stage 1 model: both heads begin as its ranking head."""
+            self.load_state_dict(state, strict=False)
+            if self.ret_head is not None:
+                self.ret_head.load_state_dict(self.head.state_dict())
+
+        def forward(self, x, cat, pad, acct=None, both_heads=False):
             e = [emb(cat[..., i]) for i, emb in enumerate(self.emb)]
             z = self.inp(torch.cat([x, *e], -1))
             if acct is not None:
                 z = z + self.acct(acct)
             for blk in self.blocks:
                 z = blk(z, pad)
-            return self.head(self.ln(z))[..., 0]
+            z = self.ln(z)
+            main = self.head(z)[..., 0]
+            if both_heads:
+                return main, (self.ret_head(z)[..., 0] if self.ret_head is not None else main)
+            return main
 
     return Ranker()
 
