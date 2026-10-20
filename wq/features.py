@@ -15,6 +15,8 @@ FEATURES = [
 ]
 # Optional, switched on with model.extra_features in config.yaml.
 EXTRA_FEATURES = ["resid_mom_12_1", "sector_mom_12_1"]
+# Integer country and sector codes, used as LightGBM categorical features with model.categorical: true.
+CATEGORICAL = ["country_id", "sector_id"]
 
 
 def feature_list(cfg):
@@ -22,7 +24,7 @@ def feature_list(cfg):
     unknown = set(extra) - set(EXTRA_FEATURES)
     if unknown:
         raise ValueError(f"unknown extra_features: {sorted(unknown)}")
-    return FEATURES + list(extra)
+    return FEATURES + list(extra) + (CATEGORICAL if cfg["model"].get("categorical") else [])
 
 
 def weekly_calendar(daily_index):
@@ -108,6 +110,9 @@ def build_panel(px_base, volume, universe, cfg):
 
     panel["country"] = panel.index.get_level_values("ticker").map(universe["country"])
     panel["sector"] = panel.index.get_level_values("ticker").map(universe["sector"])
+    for c in ("country", "sector"):                         # stable codes: sorted names of the whole universe
+        codes = {v: i for i, v in enumerate(sorted(universe[c].astype(str).unique()))}
+        panel[f"{c}_id"] = panel[c].astype(str).map(codes).astype(int)
     # 12-1 momentum ranked only against the same sector, so a hot sector doesn't dominate.
     panel["sector_mom_12_1"] = panel.groupby([panel.index.get_level_values("date"), "sector"])["mom_12_1"].rank(pct=True) - 0.5
 
@@ -122,3 +127,39 @@ def build_panel(px_base, volume, universe, cfg):
     week_no = pd.Series(np.arange(len(sig)), index=sig)
     panel["week"] = panel.index.get_level_values("date").map(week_no).astype(int)
     return panel, cal, px
+
+
+def weekly_history(px, signal_dates, lags=26):
+    """Each stock's last `lags` weekly returns up to each signal date (close to close), z-scored across
+    stocks per date and clipped at ±5. Columns hist_0 (the week ending on the signal date) .. hist_{lags-1}.
+    Long frame indexed by (date, ticker). Pass the full calendar of signal dates: lags are counted in it."""
+    ps = px.ffill(limit=5).reindex(signal_dates)
+    r = ps / ps.shift(1) - 1
+    cols = {}
+    for k in range(lags):
+        x = r.shift(k)
+        z = x.sub(x.mean(axis=1), axis=0).div(x.std(axis=1).replace(0, np.nan), axis=0).clip(-5, 5)
+        cols[f"hist_{k}"] = z.stack(future_stack=True)
+    out = pd.DataFrame(cols)
+    out.index.names = ["date", "ticker"]
+    return out
+
+
+MARKET_COLS = ["mkt_ret_4w", "mkt_ret_12w", "mkt_ret_52w", "mkt_vol_60", "dispersion_1w"]
+
+
+def market_context(px, signal_dates):
+    """The market backdrop on each signal date, the same for every stock: equal-weight index return over
+    4, 12 and 52 weeks, its daily volatility over 60 days, and the cross-sectional spread of last week's
+    stock returns. Squashed with tanh onto roughly [-1, 1]. Indexed by date."""
+    idx = market_index(px)
+    r = idx.pct_change()
+    ps = px.ffill(limit=5)
+    week_ret = ps / ps.shift(5) - 1
+    raw = pd.DataFrame({
+        "mkt_ret_4w": idx / idx.shift(20) - 1, "mkt_ret_12w": idx / idx.shift(60) - 1,
+        "mkt_ret_52w": idx / idx.shift(252) - 1, "mkt_vol_60": r.rolling(60, min_periods=40).std(),
+        "dispersion_1w": week_ret.std(axis=1),
+    }).reindex(signal_dates)
+    scale = {"mkt_ret_4w": 0.05, "mkt_ret_12w": 0.10, "mkt_ret_52w": 0.20, "mkt_vol_60": 0.015, "dispersion_1w": 0.03}
+    return np.tanh(raw / pd.Series(scale)).fillna(0.0)

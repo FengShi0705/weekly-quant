@@ -2,7 +2,7 @@
 import numpy as np
 import pandas as pd
 
-from .features import feature_list
+from .features import CATEGORICAL, feature_list
 
 
 def baseline_score(df):
@@ -52,13 +52,16 @@ def fit(train, cfg, seed=0):
     """
     features = feature_list(cfg)
     if cfg["model"].get("type", "lgbm") == "ridge":
+        if cfg["model"].get("categorical"):
+            raise ValueError("categorical features need the LightGBM model")
         return [RidgeModel(features, cfg["model"]["ridge_alpha"]).fit(train[features], train["label"])]
     import lightgbm as lgb
 
     params = dict(cfg["model"]["lgbm"])
     rounds = params.pop("n_estimators")
     params.update(objective="regression", deterministic=True, num_threads=0)
-    data = lgb.Dataset(train[features], train["label"], free_raw_data=False)
+    cats = [c for c in features if c in CATEGORICAL]
+    data = lgb.Dataset(train[features], train["label"], categorical_feature=cats or "auto", free_raw_data=False)
     return [lgb.train({**params, "seed": seed + i}, data, num_boost_round=rounds)
             for i in range(cfg["model"]["n_seeds"])]
 

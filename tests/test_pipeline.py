@@ -180,3 +180,31 @@ def test_newest_week_is_reused_only_within_the_same_day(cfg, signal_market, monk
     monkeypatch.setattr(weekly, "date", Tomorrow)
     _, model, reused = weekly.recent_raw_scores(panel, cfg, dates)             # another day: newest rescored
     assert reused == dates[:-1] and model is not None
+
+
+def test_lightgbm_with_country_and_sector(cfg, signal_market):
+    close, volume, fx, universe = signal_market
+    panel, cal, _ = prepare(cfg, close, volume, fx, universe)
+    assert set(panel["country_id"].unique()) == {0, 1, 2} and panel["sector_id"].max() == 5
+    cfg["model"]["categorical"] = True
+    dates = [d for d in cal.index if d >= pd.Timestamp("2018-01-01")][:30]
+    scores, model = walk_forward(panel, cfg, dates, verbose=False, return_model=True)
+    assert {"country_id", "sector_id"} <= set(model[0].feature_name())
+    ic = information_coefficients(scores, panel)
+    assert ic["ml"].mean() > 0.03                                  # still finds the planted momentum
+
+
+def test_history_and_market_inputs_ignore_the_future(cfg, signal_market):
+    from wq.backtest import prepare
+    from wq.features import market_context, weekly_history
+    close, volume, fx, universe = signal_market
+    _, cal, px = prepare(cfg, close, volume, fx, universe)
+    sig = cal.index[cal.index <= "2018-06-30"]                      # the full calendar of signal dates
+    T = sig[-15]
+    full_h, full_m = weekly_history(px, sig), market_context(px, sig)
+    cut = px.loc[:T]
+    part_h, part_m = weekly_history(cut, sig[sig <= T]), market_context(cut, sig[sig <= T])
+    pd.testing.assert_frame_equal(full_h.loc[:T], part_h)
+    pd.testing.assert_frame_equal(full_m.loc[:T], part_m)
+    recent = full_h.loc["2018-01-01":]
+    assert recent.notna().mean().min() > 0.9 and full_m.abs().max().max() <= 1

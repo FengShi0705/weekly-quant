@@ -8,3 +8,4 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-20T02:35:28+00:00,risk,tx_blend_vol_target_18,vol_target_18,10,562,,,,,"risk overlay on Stage 1 blend: CAGR 0.265, Sharpe 1.25, MDD -0.262, P(>30% drop in 5y) 0.141"
 2026-10-20T02:35:28+00:00,risk,tx_blend_both,both,10,562,,,,,"risk overlay on Stage 1 blend: CAGR 0.264, Sharpe 1.28, MDD -0.262, P(>30% drop in 5y) 0.127"
 2026-10-20T07:16:09+00:00,3,run1_3seeds,ee964417e8,3,562,,,-2.1501705738283765,False,first pre-registered Stage 3 run
+2026-10-20T07:22:49+00:00,ranker,ensemble,ensemble,10,561,0.028708533768457608,0.031865665463789675,-1.1924230486500436,False,pre-registered ranker trial
