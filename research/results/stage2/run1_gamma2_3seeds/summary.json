@@ -1,0 +1,79 @@
+{
+  "run_at": "2026-10-20T02:23:03+00:00",
+  "minutes": 136.9,
+  "stage2_config": {
+    "horizon": 8,
+    "rollouts_per_step": 4,
+    "steps": 300,
+    "lr": 0.0001,
+    "weight_decay": 0.001,
+    "tau_start": 1.0,
+    "tau_end": 0.1,
+    "gamma": 2.0,
+    "rho": 0.3,
+    "anchor": 0.1,
+    "aux": 0.5,
+    "n_positions": 15,
+    "cash_buffer": 0.02,
+    "max_swaps_init": 3,
+    "seed_offset": 0
+  },
+  "seeds": [
+    0,
+    1,
+    2
+  ],
+  "weeks": 562,
+  "gate": {
+    "weekly_return_diff_vs_stage1_blend": -2.5678839161733527e-05,
+    "nw_t": -0.04563790249965873,
+    "max_drawdown": -0.3162937485242908,
+    "pass": false
+  },
+  "performance": {
+    "stage2": {
+      "final_value": 151039.15045431058,
+      "cagr": 0.28615029455708885,
+      "ann_vol": 0.25165691307971244,
+      "sharpe": 1.12823676162083,
+      "max_drawdown": -0.3162937485242908,
+      "turnover": 0.238066268199783,
+      "cost_per_year": 0.03821112616159303,
+      "active_vs_equal_weight": 0.1182092713765587,
+      "active_t": 2.402366376288599
+    },
+    "incumbent": {
+      "final_value": 122274.74184628515,
+      "cagr": 0.26120884416487833,
+      "ann_vol": 0.20128393130186542,
+      "sharpe": 1.2565567599767262,
+      "max_drawdown": -0.23481729147242447,
+      "turnover": 0.05727890898079787,
+      "cost_per_year": 0.008962186329330933,
+      "active_vs_equal_weight": 0.08942945947622927,
+      "active_t": 1.7201707288174304
+    },
+    "stage1_tx_blend": {
+      "final_value": 165819.85846019717,
+      "cagr": 0.29732888955883596,
+      "ann_vol": 0.22014625458850315,
+      "sharpe": 1.2957925667287606,
+      "max_drawdown": -0.2593296814484327,
+      "turnover": 0.03219686855081725,
+      "cost_per_year": 0.0054085410870375345,
+      "active_vs_equal_weight": 0.12181018888502008,
+      "active_t": 3.3639941055316824
+    },
+    "stage1_deployed_rules": {
+      "final_value": 100043.08858514873,
+      "cagr": 0.2379667031311865,
+      "ann_vol": 0.24710728285191408,
+      "sharpe": 0.9894109182987247,
+      "max_drawdown": -0.3157527098429055,
+      "turnover": 0.4175243798657908,
+      "cost_per_year": 0.06677266115267817,
+      "active_vs_equal_weight": 0.073610011370441,
+      "active_t": 1.3336017687514137
+    }
+  }
+}
