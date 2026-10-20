@@ -103,7 +103,7 @@ def build_dense(panel, cal, px, universe, cfg, div_tax=None, features=FEATURES):
             per_share = div_tax.loc[:b].iloc[-1] - div_tax.loc[:a].iloc[-1]
             ret[i] -= np.nan_to_num((per_share / pxv.loc[:a].iloc[-1]).reindex(tickers).to_numpy(np.float32))
     sig = panel["raw_vol_60"].unstack().reindex(index=dates, columns=tickers)
-    sigma = (sig.fillna(sig.median(axis=1).median()) * np.sqrt(5)).to_numpy(np.float32)
+    sigma = np.array((sig.fillna(sig.median(axis=1).median()) * np.sqrt(5)).to_numpy(np.float32))
     kb, ks = cost_rates(universe, cfg, tickers)
     return Dense(dates, np.array([w.week for w in weeks]), tickers, x, cat, present, y, ret, known, sigma,
                  kb, ks), vocab
