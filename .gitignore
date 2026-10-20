@@ -7,3 +7,4 @@ data/cache/
 .pytest_cache/
 research/results/stage1_smoke/
 research/models/
+research/results/stage2/smoke/
