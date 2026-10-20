@@ -166,30 +166,43 @@ def run(cfg, close_local, volume, fx_usd, universe, spec_path):
     cfgs = strategy_configs(cfg, spec_path)
     etf_px = load_benchmarks(cfg, fx_usd)
     div_yield = load_dividends(cfg)
-    prepared, div_tax = {}, {}
+    prepared, div_tax, failed = {}, {}, {}
     for name, c in cfgs.items():
         print(f"\n=== {name} ===")
-        key = (str(c["universe"]), c["model"]["label_horizon_weeks"])
-        if key not in prepared:
-            prepared[key] = prepare(c, close_local, volume, fx_usd, universe)
-            div_tax[key] = (dividend_tax_per_share(prepared[key][2], div_yield, universe, c)
-                            if div_yield is not None else None)
-        _, _, px = prepared[key]
-        c["paper_dir"].mkdir(parents=True, exist_ok=True)
-        if not c["paths"]["holdings"].exists():
-            write_holdings(c["paths"]["holdings"], {}, c["account"]["capital"])
-        # Dividend tax on what was held since the last run: the old holdings up to the fill, the new after.
-        since, e, last = last_nav_date(c), exec_date(c, px), px.index[-1]
-        withheld = charge_dividend_tax(c, div_tax[key], since, e if e is not None else last)
-        fill_pending(c, px, universe, fx_usd)
-        if e is not None:
-            withheld += charge_dividend_tax(c, div_tax[key], max(e, since) if since is not None else e, last)
-        equity = record_nav(c, px, etf_px, withheld)
-        print(f"  account value {equity:,.2f} {c['account']['base_currency']}")
-        shares, cash = read_holdings(c["paths"]["holdings"], c["account"]["capital"])
-        save_pending(c, plan(c, close_local, volume, fx_usd, universe, shares, cash, prepared[key]))
+        try:
+            _run_strategy(c, close_local, volume, fx_usd, universe, etf_px, div_yield, prepared, div_tax)
+        except Exception as e:                      # one strategy failing must not block the others
+            failed[name] = f"{type(e).__name__}: {e}"
+            print(f"  FAILED: {failed[name]}")
     etf_names = {t: v["name"] for t, v in cfg["benchmarks"]["etfs"].items()}
     text = summary(cfgs, etf_names)
+    if failed:
+        text += "\n**Failed this run:** " + "; ".join(f"{k} ({v})" for k, v in failed.items()) + "\n"
     (spec_path.parent / "summary.md").write_text(text)
     print("\n" + text)
+    if failed:
+        raise RuntimeError(f"paper run failed for: {', '.join(failed)} (the other strategies completed)")
     return cfgs
+
+
+def _run_strategy(c, close_local, volume, fx_usd, universe, etf_px, div_yield, prepared, div_tax):
+    """Advance one strategy: fill last run's orders, deduct dividend tax, value it, plan this week."""
+    key = (str(c["universe"]), c["model"]["label_horizon_weeks"])
+    if key not in prepared:
+        prepared[key] = prepare(c, close_local, volume, fx_usd, universe)
+        div_tax[key] = (dividend_tax_per_share(prepared[key][2], div_yield, universe, c)
+                        if div_yield is not None else None)
+    _, _, px = prepared[key]
+    c["paper_dir"].mkdir(parents=True, exist_ok=True)
+    if not c["paths"]["holdings"].exists():
+        write_holdings(c["paths"]["holdings"], {}, c["account"]["capital"])
+    # Dividend tax on what was held since the last run: the old holdings up to the fill, the new after.
+    since, e, last = last_nav_date(c), exec_date(c, px), px.index[-1]
+    withheld = charge_dividend_tax(c, div_tax[key], since, e if e is not None else last)
+    fill_pending(c, px, universe, fx_usd)
+    if e is not None:
+        withheld += charge_dividend_tax(c, div_tax[key], max(e, since) if since is not None else e, last)
+    equity = record_nav(c, px, etf_px, withheld)
+    print(f"  account value {equity:,.2f} {c['account']['base_currency']}")
+    shares, cash = read_holdings(c["paths"]["holdings"], c["account"]["capital"])
+    save_pending(c, plan(c, close_local, volume, fx_usd, universe, shares, cash, prepared[key]))

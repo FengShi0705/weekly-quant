@@ -443,6 +443,19 @@ the next week), they can hold different stocks for months, so part of the value 
 holdings, not costs. The holdings table shows how much. The per-fill costs are the evidence for the
 go-live cost rule below.
 
+**A third strategy from 24 Oct 2026: `tx_blend`.** The Stage 1 transformer
+(`docs/GRPO transformer portfolio design.md`, `research/preregistration_stage1.md`) ranked stocks better
+than LightGBM in its pre-registered test: weekly IC 0.032 vs 0.019 (paired t 2.2, 10 seeds), ahead in 8 of
+11 years. Blended 0.7 transformer + 0.3 momentum under today's rules it backtested at 30.8% a year,
+Sharpe 1.30, worst drop −26.4% (current strategy 26.1%, 1.26, −23.5%). It is paper traded in the
+simulated ledger only. Each week is scored by the 10 saved models of its quarterly refit block
+(`paper/models/tx/`); when a new block starts the weekly run retrains them (about 10 minutes on CPU).
+Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
+- It replaces `main` in the ISA only after at least 26 weeks of paper trading with live weekly IC and
+  returns inside the backtest's 90% bootstrap bands, and the full checks in the design report
+  (sub-periods, double costs). A higher paper return over a few months is not enough on its own.
+- Stop it at once if it falls 20% from its peak or produces obviously wrong orders.
+
 **Review rules, set before any results** (review after 8–12 weeks, mid-December 2026 to mid-January 2027):
 
 - **Twelve weeks of returns cannot pick a winner between the two strategies.** Weekly returns are far too

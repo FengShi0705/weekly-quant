@@ -107,3 +107,18 @@ def test_ranking_loss_prefers_correct_order():
     good = deep.ranking_loss(torch.tensor([[2.0, 1.0, -1.0, -2.0, 9.0]]), y, pad, cfg)
     bad = deep.ranking_loss(torch.tensor([[-2.0, -1.0, 1.0, 2.0, 9.0]]), y, pad, cfg)
     assert good < bad and torch.isfinite(good)
+
+
+def test_live_scores_retrain_and_match_the_walk_forward(cfg, signal_market, tmp_path):
+    close, volume, fx, universe = signal_market
+    panel, cal, _ = prepare(cfg, close, volume, fx, universe)
+    weeks, vocab = deep.build_weeks(panel, universe)
+    dates = [d for d in cal.index if d >= pd.Timestamp("2017-01-01")][:40]
+    scfg = small_cfg(max_epochs=2, seeds=(0, 1), refit_anchor=str(dates[0].date()))
+    backtest, _ = deep.walk_forward_tx(weeks, vocab, dates, scfg, verbose=False)
+    live_dates = dates[22:30]                                    # spans the boundary between two blocks
+    live = deep.live_scores(panel, universe, live_dates, tmp_path, scfg, verbose=False)
+    pd.testing.assert_frame_equal(live, backtest.loc[live_dates], atol=1e-6)
+    assert len(list(tmp_path.glob("*/refit*_seed*.pt"))) == 4    # two blocks x two seeds, saved
+    with pytest.raises(FileNotFoundError):
+        deep.live_scores(panel, universe, live_dates, tmp_path / "empty", scfg, retrain=False)

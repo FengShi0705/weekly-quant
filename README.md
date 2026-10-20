@@ -45,6 +45,7 @@ CASH,412.50
 orders at the Monday close, records account value next to buy & hold of index funds, and plans this
 week's orders. State and weekly order sheets are kept in `paper/<strategy>/`, and `paper/summary.md`
 compares the strategies. A scheduled cloud run does this every Saturday.
+A strategy with `model: {type: transformer}` is scored by the transformer models in `paper/models/tx/` (needs PyTorch: `pip install torch --index-url https://download.pytorch.org/whl/cpu`).
 
 `python -m wq t212 [--execute]` trades the main strategy in a **Trading 212 Practice** account through
 Trading 212's API. It can only reach the Practice (demo) server and is a dry run unless you pass

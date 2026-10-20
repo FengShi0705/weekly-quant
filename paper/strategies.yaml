@@ -6,3 +6,5 @@ strategies:
   ml_only_10:               # the Phase 1b rule's pick (PLAN.md §14)
     model: {ml_weight: 1.0}
     portfolio: {n_positions: 10}
+  tx_blend:                 # from 24 Oct 2026: Stage 1 transformer (research/preregistration_stage1.md)
+    model: {type: transformer}   # 0.7 transformer + 0.3 momentum, today's rules; models in paper/models/tx

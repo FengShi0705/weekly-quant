@@ -14,4 +14,5 @@ def load_config(path="config.yaml"):
     cfg["paths"]["reports"] = root / cfg["paths"]["reports"]
     cfg["paths"]["holdings"] = root / cfg["paths"]["holdings"]
     cfg["paths"]["score_history"] = root / cfg["paths"]["score_history"]
+    cfg["paths"]["tx_models"] = root / cfg["paths"].get("tx_models", "paper/models/tx")
     return cfg

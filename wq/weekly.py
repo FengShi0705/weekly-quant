@@ -31,6 +31,24 @@ def model_fingerprint(cfg):
     return hashlib.sha1(json.dumps(cfg["model"], sort_keys=True, default=str).encode()).hexdigest()[:12]
 
 
+def transformer_raw_scores(panel, cfg, dates, universe):
+    """Like recent_raw_scores, for model.type 'transformer': scores come from the saved models of each
+    week's refit block (wq.deep.live_scores), so they are recomputed exactly rather than stored."""
+    from .deep import Stage1Config, live_scores
+    from .model import _rank, baseline_score
+    over = dict(cfg["model"].get("transformer") or {})
+    over["seeds"] = tuple(range(int(over.pop("seeds", 10))))
+    tx = live_scores(panel, universe, dates, cfg["paths"]["tx_models"], Stage1Config(**over))["tx"]
+    out = []
+    for d in dates:
+        X = panel.xs(d, level="date", drop_level=False)
+        ml = tx.xs(d, level="date", drop_level=False).reindex(X.index)
+        base = baseline_score(X)
+        w = cfg["model"]["ml_weight"]
+        out.append(pd.DataFrame({"ml": ml, "baseline": base, "score": w * _rank(ml) + (1 - w) * _rank(base)}))
+    return pd.concat(out), None, []
+
+
 def recent_raw_scores(panel, cfg, dates):
     """Unsmoothed scores for `dates` (oldest first, newest last).
 
@@ -82,7 +100,10 @@ def plan(cfg, close_local, volume, fx_usd, universe, shares, cash, prepared=None
     T = dates[-1]
     k = cfg["model"]["score_smoothing_weeks"]
     print(f"Scoring signal date {T.date()} (averaged over the last {k} weeks) ...")
-    raw, model, reused = recent_raw_scores(panel, cfg, list(dates[-k:]))
+    if cfg["model"].get("type") == "transformer":
+        raw, model, reused = transformer_raw_scores(panel, cfg, list(dates[-k:]), universe)
+    else:
+        raw, model, reused = recent_raw_scores(panel, cfg, list(dates[-k:]))
     if reused:
         print(f"  reused saved scores for {', '.join(str(d.date()) for d in reused)}")
     scores = smooth_scores(raw, k).xs(T, level="date")

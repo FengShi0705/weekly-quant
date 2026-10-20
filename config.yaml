@@ -98,3 +98,4 @@ paths:
   reports: reports
   holdings: holdings.csv
   score_history: reports/history/raw_scores.csv   # each week's scores, reused for the 4-week average
+  tx_models: paper/models/tx    # transformer models per refit block (model.type: transformer)

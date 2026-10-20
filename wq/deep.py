@@ -44,6 +44,7 @@ class Stage1Config:
     seeds: tuple = (0, 1, 2)
     workers: int = 4
     use_categories: bool = True     # False: country, sector and currency ids are blanked (ablation)
+    refit_anchor: str = "2016-01-08"  # first walk-forward week; refits fall every refit_every_weeks from it
     save_dir: str = ""              # if set, each refit's model is saved there (for Stage 2)
     features: list = field(default_factory=lambda: list(FEATURES))
 
@@ -249,10 +250,10 @@ def refit_plan(weeks, pred_dates, cfg, horizon=1):
 
 def _job(args):
     """One (refit, seed): pick epochs on the inner validation block, retrain on the full window, score."""
-    plan_i, seed, n_feat, vocab, cfg = args
+    plan_i, seed, n_feat, vocab, cfg, *given = args
     torch = _torch()
     torch.set_num_threads(1)
-    window, fit_w, val_w, chunk = _PLAN[plan_i]
+    window, fit_w, val_w, chunk = given[0] if given else _PLAN[plan_i]
     _, best_ep = _train(fit_w, n_feat, vocab, cfg, seed * 1000 + plan_i, val_weeks=val_w)
     model, _ = _train(window, n_feat, vocab, cfg, seed * 1000 + plan_i, epochs=max(best_ep, 1))
     if cfg.save_dir:
@@ -263,7 +264,7 @@ def _job(args):
     return plan_i, seed, best_ep, pd.concat(rows)
 
 
-_PLAN = []
+_PLAN = {}
 
 
 def walk_forward_tx(weeks, vocab, pred_dates, cfg, verbose=True):
@@ -272,7 +273,7 @@ def walk_forward_tx(weeks, vocab, pred_dates, cfg, verbose=True):
     global _PLAN
     if not cfg.use_categories:
         weeks = [Week(w.date, w.week, w.tickers, w.x, np.zeros_like(w.cat), w.y) for w in weeks]
-    _PLAN = refit_plan(weeks, pred_dates, cfg)
+    _PLAN = dict(enumerate(refit_plan(weeks, pred_dates, cfg)))
     n_feat = weeks[0].x.shape[1]
     jobs = [(i, s, n_feat, vocab, cfg) for i in range(len(_PLAN)) for s in cfg.seeds]
     results, log = [], []
@@ -289,7 +290,57 @@ def walk_forward_tx(weeks, vocab, pred_dates, cfg, verbose=True):
         for i, seed, ep, df in map(_job, jobs):
             results.append(df)
             log.append({"refit": i, "first_date": _PLAN[i][3][0].date, "seed": seed, "epochs": ep})
-    raw = pd.concat(results)
+    return _average_seeds(pd.concat(results)), pd.DataFrame(log)
+
+
+def _average_seeds(raw):
+    raw = raw.copy()
     raw["tx"] = raw.groupby(["date", "seed"])["tx"].transform(lambda v: (v - v.mean()) / (v.std() or 1.0))
-    scores = raw.groupby(["date", "ticker"])["tx"].mean().to_frame()
-    return scores, pd.DataFrame(log)
+    return raw.groupby(["date", "ticker"])["tx"].mean().to_frame()
+
+
+def live_scores(panel, universe, dates, model_dir, cfg=None, retrain=True, verbose=True):
+    """Transformer scores for `dates`, exactly as walk_forward_tx produces them in the backtest.
+
+    Each date is scored by the models of the refit whose block (refit_every_weeks long, counted from
+    refit_anchor) contains it, trained on the 260 weeks before the block with the same seeds. Models
+    are kept in model_dir/<block start date>/refitNNN_seedS.pt; a missing block is trained and saved
+    when retrain is True (about 10 minutes for 10 seeds on 4 CPUs).
+    """
+    import multiprocessing as mp
+    from pathlib import Path
+    torch = _torch()
+    cfg = cfg or Stage1Config(seeds=tuple(range(10)))
+    weeks, vocab = build_weeks(panel, universe, cfg.features)
+    if not cfg.use_categories:
+        weeks = [Week(w.date, w.week, w.tickers, w.x, np.zeros_like(w.cat), w.y) for w in weeks]
+    by_date, by_week = {w.date: w for w in weeks}, {w.week: w for w in weeks}
+    anchor = by_date[pd.Timestamp(cfg.refit_anchor)].week
+    n_feat = weeks[0].x.shape[1]
+    rows = []
+    for d in dates:
+        w = by_date[pd.Timestamp(d)]
+        idx = (w.week - anchor) // cfg.refit_every_weeks
+        start = by_week[anchor + idx * cfg.refit_every_weeks]
+        folder = Path(model_dir) / str(start.date.date())
+        files = [folder / f"refit{idx:03d}_seed{s}.pt" for s in cfg.seeds]
+        if not all(f.exists() for f in files):
+            if not retrain:
+                raise FileNotFoundError(f"no transformer models for the block starting {start.date.date()}")
+            plan = refit_plan(weeks, [start.date], cfg)
+            if not plan:
+                raise ValueError(f"not enough history to train the block starting {start.date.date()}")
+            folder.mkdir(parents=True, exist_ok=True)
+            if verbose:
+                print(f"  training transformer models for the block starting {start.date.date()} "
+                      f"({len(cfg.seeds)} seeds)", flush=True)
+            jcfg = Stage1Config(**{**cfg.__dict__, "save_dir": str(folder)})
+            jobs = [(idx, s, n_feat, vocab, jcfg, plan[0]) for s, f in zip(cfg.seeds, files) if not f.exists()]
+            # spawn, not fork: this runs inside a process where PyTorch threads may already be running
+            with ProcessPoolExecutor(cfg.workers, mp_context=mp.get_context("spawn")) as ex:
+                list(ex.map(_job, jobs))
+        for s, f in zip(cfg.seeds, files):
+            m = make_model(n_feat, vocab, cfg)
+            m.load_state_dict(torch.load(f))
+            rows.append(pd.DataFrame({"date": w.date, "ticker": w.tickers, "tx": _score(m, [w])[0], "seed": s}))
+    return _average_seeds(pd.concat(rows))
