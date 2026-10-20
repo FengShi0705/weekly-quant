@@ -247,11 +247,13 @@ def policy_scores(models, d, t, shares, equity, price, cfg):
     return s[d.present[t]]
 
 
-def simulate_policy(score_fn, panel, cal, px, universe, fx_usd, cfg, dates, div_tax=None, capital=None):
+def simulate_policy(score_fn, panel, cal, px, universe, fx_usd, cfg, dates, div_tax=None, capital=None,
+                    exposure_fn=None):
     """The backtest loop of backtest.simulate, with scores computed each week from the current holdings.
 
     score_fn(T, shares, equity, price) -> Series ticker -> score. With a score_fn that ignores the
-    holdings this reproduces backtest.simulate exactly (tested)."""
+    holdings this reproduces backtest.simulate exactly (tested). exposure_fn(T, rows so far) -> fraction
+    invested replaces the regime filter (for risk-overlay research)."""
     from .costs import dividend_tax
     base = cfg["account"]["base_currency"]
     px_val = px.ffill()
@@ -268,7 +270,7 @@ def simulate_policy(score_fn, panel, cal, px, universe, fx_usd, cfg, dates, div_
         prev_e = e
         equity = cash + sum(q * price[t] for t, q in shares.items())
         s = score_fn(T, shares, equity, price)
-        expo = regime_exposure(mkt_w, T, cfg)
+        expo = exposure_fn(T, rows) if exposure_fn else regime_exposure(mkt_w, T, cfg)
         vol = panel.xs(T, level="date")["raw_vol_60"]
         targets = select_targets(s, set(shares), universe, price, equity, cfg, expo, vol)
         orders = generate_orders(shares, targets, price, equity, universe, cfg, cash)

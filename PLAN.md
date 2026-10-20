@@ -446,8 +446,10 @@ go-live cost rule below.
 **A third strategy from 24 Oct 2026: `tx_blend`.** The Stage 1 transformer
 (`docs/GRPO transformer portfolio design.md`, `research/preregistration_stage1.md`) ranked stocks better
 than LightGBM in its pre-registered test: weekly IC 0.032 vs 0.019 (paired t 2.2, 10 seeds), ahead in 8 of
-11 years. Blended 0.7 transformer + 0.3 momentum under today's rules it backtested at 30.8% a year,
-Sharpe 1.30, worst drop −26.4% (current strategy 26.1%, 1.26, −23.5%). It is paper traded in the
+11 years. Blended 0.7 transformer + 0.3 momentum under today's rules, with at most 5 names per sector,
+it backtested at 30.5% a year, Sharpe 1.34, worst drop −26.3% (current strategy 26.1%, 1.26, −23.5%).
+Without the sector cap it made 30.8% but had a 19.5% chance of a drop beyond 30% within 5 years in a
+block bootstrap, against 15.1% with the cap (`research/risk_overlays.py`). It is paper traded in the
 simulated ledger only. Each week is scored by the 10 saved models of its quarterly refit block
 (`paper/models/tx/`); when a new block starts the weekly run retrains them (about 10 minutes on CPU).
 Live scores reproduce the backtest's to 1e-7. Rules for it, set now:

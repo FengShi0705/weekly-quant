@@ -8,3 +8,4 @@ strategies:
     portfolio: {n_positions: 10}
   tx_blend:                 # from 24 Oct 2026: Stage 1 transformer (research/preregistration_stage1.md)
     model: {type: transformer}   # 0.7 transformer + 0.3 momentum, today's rules; models in paper/models/tx
+    portfolio: {max_per_sector: 5}   # research/risk_overlays.py: lower drop risk at ~0.3 pts/yr
