@@ -14,6 +14,10 @@ weekly signals Jan 2016 – Oct 2026, Trading 212 costs and dividend tax, £10,0
 | 2. Cost-aware fine-tuning, soft 8-week rollouts | run 1, 3 seeds | net return above the Stage 1 blend, worst drop ≥ −30% | **Fail**: same net return, 23.8% weekly turnover, worst drop −31.6% |
 | 3. GRPO through the exact rules | run 1, 3 seeds | beat the Stage 1 blend with t ≥ 1, worst drop ≥ −30%, drop risk no higher | **Fail**: 21.1% CAGR, 45.6% weekly turnover, worst drop −33.3%, t −2.2 |
 | Risk controls on the Stage 1 blend | 4 variants | (exploratory) | 5-per-sector cap: 30.5%, Sharpe 1.34, chance of a >30% drop in 5 years 15.1% (19.5% without) |
+| Ranker: LightGBM + country/sector | `lgbm_cat` | t ≥ 2.5 vs LightGBM | **Fail**: IC 0.025 vs 0.019, t 1.3 (and below the transformer, t −1.5) |
+| Ranker: transformer + 26-week return history | `tx_history` | t ≥ 2.5 vs Stage 1 run 1 | **Fail**: IC 0.031 vs 0.033, t −0.5 |
+| Ranker: transformer + market backdrop | `tx_market` | t ≥ 2.5 vs Stage 1 run 1 | **Fail**: IC 0.032 vs 0.033, t −0.6 |
+| Ranker: 50/50 transformer + LightGBM | `ensemble` | t ≥ 2.5 vs the 10-seed transformer | **Fail**: IC 0.029 vs 0.032, t −1.2 |
 
 Backtest of the arms that matter (2016–2026, after costs and dividend tax):
 
@@ -39,7 +43,12 @@ Backtest of the arms that matter (2016–2026, after costs and dividend tax):
      Stage 1 scores with no hold band (46% vs 42% weekly turnover).
    This matches the design report's prior: for a £10k account that cannot move prices, a policy gradient
    mostly re-estimates noisily what simple rules already do.
-3. **Backtest returns are a poor judge between variants.** Returns of the same arm moved by several
+3. **The ranker is at its limit on this data.** Country and sector inputs add about 0.006 IC to either
+   model, and the transformer adds about 0.007 over LightGBM with or without them. A return history,
+   the market backdrop, or averaging with LightGBM added nothing. With only 245 stocks and price/volume
+   inputs, further gains probably need more breadth (a larger, survivorship-free universe) or new
+   information (fundamentals, news), not a different network.
+4. **Backtest returns are a poor judge between variants.** Returns of the same arm moved by several
    points between runs (seeds, a UK-only data fix), while ICs were stable. Gates use IC or paired
    differences, and the candidate is judged in paper trading.
 

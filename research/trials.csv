@@ -10,3 +10,5 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-20T07:16:09+00:00,3,run1_3seeds,ee964417e8,3,562,,,-2.1501705738283765,False,first pre-registered Stage 3 run
 2026-10-20T07:22:49+00:00,ranker,ensemble,ensemble,10,561,0.028708533768457608,0.031865665463789675,-1.1924230486500436,False,pre-registered ranker trial
 2026-10-20T07:51:06+00:00,ranker,lgbm_cat,lgbm_cat,5,561,0.024955296718880107,0.018847330732438248,1.3147260805159113,False,pre-registered ranker trial
+2026-10-20T08:32:21+00:00,ranker,tx_history,tx_history,3,561,0.030626486943780902,0.03287450254393007,-0.5115717426825654,False,pre-registered ranker trial
+2026-10-20T09:16:50+00:00,ranker,tx_market,tx_market,3,561,0.03155465105505432,0.03287450254393007,-0.5758890008468929,False,pre-registered ranker trial
