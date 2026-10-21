@@ -59,3 +59,67 @@ Backtest of the arms that matter (2016–2026, after costs and dividend tax):
 - Stages 2 and 3 are closed as specified. Reopening them needs a materially different design (for
   example multi-week rollouts from the policy's own holdings, or keeping the hold band and learning
   only its width), pre-registered as new trials.
+
+## Phase 3: beyond the ranker (21 Oct 2026)
+
+Pre-registered in `research/preregistration_phase3.md`. The bar is `tx_blend` (30.5% a year, Sharpe 1.34,
+worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000 Trading 212 ISA.
+
+| Test | Gate | Result |
+|---|---|---|
+| A. Earnings announcements as inputs (Yahoo dates and EPS surprises) | paired IC t ≥ 2 vs Stage 1 run 1 | **Fail**: IC 0.031 vs 0.033, t −1.1 (backtest 31.2%, worst drop −27.8%) |
+| B. Trade every day (same models, 20-day score average) | paired weekly return t ≥ 2 vs weekly | **Fail**: 29.4% vs 30.5%, t −0.5, worst drop −27.9% |
+| B2. Trade every 4 weeks, all four starting weeks | average paired t ≥ 2, all four ahead | **Fail**: 31.9 / 29.7 / 24.9 / 29.8%, t −1.0 |
+| C. Index ETFs and leveraged index trend (no stock picking) | CAGR > 30.5%, drop ≥ −30%, drop risk ≤ 15% | **Fail**: no arm passes |
+
+Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
+
+| Arm | CAGR | Sharpe | Worst drop | Chance of a >30% drop within 5 years |
+|---|---|---|---|---|
+| `tx_blend` (bar) | 30.5% | 1.34 | −26.3% | 15% |
+| C1 Buy & hold S&P 500 (VUSA) | 16.3% | 1.10 | −25.5% | 5% |
+| C2 Dual momentum (S&P 500 / world ex-US / gilts) | 8.9% | 0.60 | −29.1% | 31% |
+| C3 Multi-asset trend (five ETFs, 10-month average) | 6.7% | 1.02 | −9.9% | 0% |
+| C4 S&P 500 2x, 200-day trend filter (XS2D) | 13.9% | 0.67 | −45.4% | 52% (1988–2026) |
+| C5 S&P 500 3x, 200-day trend filter (3LUS) | 20.0% | 0.71 | −58.0% | 88% (1988–2026) |
+| C6 S&P 500 2x, buy & hold | 25.7% | 0.90 | −58.1% | 72% |
+| C7 Half `tx_blend`, half C4 | 22.6% | 1.11 | −29.7% | 27% |
+| Nasdaq-100 3x trend (LQQ3; hindsight, information only) | 38.0% | 0.95 | −51.0% | 96% |
+
+Over 1988–2026 (synthetic, USD) the 200-day filter cuts the S&P 500's worst drop from −55% to −22%, but
+leverage brings it back: −47% at 2x and −62% at 3x, both in 2000–02. The synthetic series match the real
+products closely over 2016–2026 (3LUS 33.8% vs 33.8% a year; XS2D 25.1% vs 26.6%).
+
+What was learned:
+
+1. **Earnings announcements add nothing the prices don't already carry.** The reaction to the latest
+   announcement, the EPS surprise and its age were available for 77% of stock-weeks (98% in the US, 26%
+   in the UK). The transformer did slightly worse with them. LightGBM did slightly better (information
+   only: IC 0.021 vs 0.019, t 1.3), still far below the transformer's 0.032. Post-earnings drift in
+   large caps is small, and what there is is probably already carried by the 1–3 month return inputs.
+2. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
+   with the same costs (0.62% vs 0.63% a year), and 0.9 points a year less. Zero commission doesn't
+   matter much here: the costs that bind are the FX fee and stamp duty, which a hold band already keeps low.
+3. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
+   anything from 24.9% to 31.9% a year depending only on which week the schedule started. A single
+   backtest figure is worth about ±3–4 points; only paired tests separate variants.
+4. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
+   unlevered funds cut drawdowns sharply but returned 7–10% a year in 2016–2026 (fast V-shaped recoveries
+   whipsawed them). Leveraged index funds earn more only by taking drops of 45–60%. The survivorship
+   bias in `tx_blend`'s backtest (its universe is today's large caps) is real, but it would have to be
+   worth more than 10 points a year to change this ranking.
+
+Decisions:
+
+- Nothing changes in paper trading. `tx_blend` stays the candidate next to `main`.
+- **Exhausted with the data we have:**
+  - the network and its inputs;
+  - learned trading rules;
+  - trading frequency;
+  - free earnings data;
+  - index and leveraged ETF strategies.
+- **What is left needs new data, and is your decision:**
+  - a larger, survivorship-free universe with point-in-time fundamentals (paid data, roughly $20–80 a
+    month), which adds breadth and value, quality and revision signals;
+  - news and filings scored as features (PLAN.md §11, Phase 4), for example historical news tone from
+    GDELT on Google BigQuery, which would fit the £100 research budget.

@@ -472,3 +472,23 @@ Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
 - **Revisit `main` vs `ml_only_10` after about 6 months of live data, not before.**
 - **Stop and review at once** if a paper account falls 20% from its peak or a weekly run produces
   obviously wrong orders.
+
+## 16. Phase 3 research: other models and strategies (21 Oct 2026)
+
+Four pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
+for something better than `tx_blend` for a £10,000 Trading 212 ISA. All four failed:
+
+| Test | Result |
+|---|---|
+| Earnings announcements (Yahoo dates, EPS surprises) as transformer inputs | IC 0.031 vs 0.033, t −1.1 |
+| Trading every day instead of weekly | 29.4% vs 30.5% a year, t −0.5 |
+| Trading every 4 weeks (all four starting weeks) | 24.9–31.9% vs 30.5%, average t −1.0 |
+| Index ETFs and leveraged index trend (S&P 500 1x/2x/3x, dual momentum, multi-asset trend) | none combines the return with a drop under 30%; leveraged trend dropped 45–62% |
+
+**Takeaways:**
+- **Zero commission doesn't make frequent trading pay.** The FX fee and stamp duty are the costs that
+  bind, and the hold band already keeps them at about 0.6% a year.
+- **The trading calendar alone moves a backtest by up to 7 points a year.** Only paired tests can
+  separate variants.
+- **Further gains need new data:** a larger, survivorship-free universe with fundamentals, or news and
+  filings features.
