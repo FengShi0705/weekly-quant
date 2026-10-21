@@ -12,3 +12,10 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-20T07:51:06+00:00,ranker,lgbm_cat,lgbm_cat,5,561,0.024955296718880107,0.018847330732438248,1.3147260805159113,False,pre-registered ranker trial
 2026-10-20T08:32:21+00:00,ranker,tx_history,tx_history,3,561,0.030626486943780902,0.03287450254393007,-0.5115717426825654,False,pre-registered ranker trial
 2026-10-20T09:16:50+00:00,ranker,tx_market,tx_market,3,561,0.03155465105505432,0.03287450254393007,-0.5758890008468929,False,pre-registered ranker trial
+2026-10-21T20:43:18+00:00,phase3,B_daily_trading,daily,10,561,,,-0.5230841752086847,False,"daily CAGR 0.294 vs weekly 0.305, MDD -0.279"
+2026-10-21T20:45:22+00:00,phase3,C_C1_sp500_buy_hold,etf,,,,,,False,"CAGR 0.163, MDD -0.255, P(>30% in 5y) 0.053"
+2026-10-21T20:45:22+00:00,phase3,C_C2_dual_momentum,etf,,,,,,False,"CAGR 0.089, MDD -0.291, P(>30% in 5y) 0.311"
+2026-10-21T20:45:22+00:00,phase3,C_C3_multi_asset_trend,etf,,,,,,False,"CAGR 0.067, MDD -0.099, P(>30% in 5y) 0.000"
+2026-10-21T20:45:22+00:00,phase3,C_C4_sp500_2x_trend,etf,,,,,,False,"CAGR 0.139, MDD -0.454, P(>30% in 5y) 0.524"
+2026-10-21T20:45:22+00:00,phase3,C_C5_sp500_3x_trend,etf,,,,,,False,"CAGR 0.200, MDD -0.580, P(>30% in 5y) 0.877"
+2026-10-21T20:50:11+00:00,phase3,B2_every_4_weeks,every4,10,561,,,-1.044266223419509,False,pre-registered Phase 3 test B2

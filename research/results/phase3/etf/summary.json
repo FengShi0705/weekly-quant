@@ -1,0 +1,298 @@
+{
+  "run_at": "2026-10-21T20:45:22+00:00",
+  "tracking": {
+    "XS2D.L": {
+      "bad_prints_replaced": [
+        "2020-03-13",
+        "2020-03-16",
+        "2025-04-09",
+        "2025-04-10"
+      ],
+      "real_cagr": 0.25109720377162525,
+      "synthetic_cagr": 0.2658057926138937,
+      "weekly_corr": 0.9346632299984186
+    },
+    "3LUS.L": {
+      "bad_prints_replaced": [
+        "2017-03-16",
+        "2017-06-26",
+        "2017-06-28",
+        "2018-02-06",
+        "2020-03-10",
+        "2020-03-13",
+        "2020-03-16",
+        "2020-03-17",
+        "2025-04-08",
+        "2025-04-09",
+        "2025-04-10"
+      ],
+      "real_cagr": 0.3375850802374445,
+      "synthetic_cagr": 0.3376760092441462,
+      "weekly_corr": 0.9001438928221016
+    },
+    "LQQ3.L": {
+      "bad_prints_replaced": [
+        "2017-03-17",
+        "2018-01-24",
+        "2018-02-14",
+        "2018-03-29",
+        "2020-03-10",
+        "2020-03-13",
+        "2020-03-16",
+        "2020-03-17",
+        "2020-07-13",
+        "2020-07-14",
+        "2020-11-09",
+        "2021-03-08",
+        "2022-01-24",
+        "2022-05-05",
+        "2025-04-08",
+        "2025-04-09",
+        "2025-04-10"
+      ],
+      "real_cagr": 0.4128811427207837,
+      "synthetic_cagr": 0.44540384642802855,
+      "weekly_corr": 0.8982658761420355
+    }
+  },
+  "arms": {
+    "C1_sp500_buy_hold": {
+      "cagr": 0.16270418059672243,
+      "ann_vol": 0.14718281883965226,
+      "sharpe": 1.0954622895974684,
+      "max_drawdown_daily": -0.25473801167906185,
+      "max_drawdown_weekly": -0.21558392995167408,
+      "p_drop_over_30pct_5y": 0.0526,
+      "worst_drop_trough": "2020-03-23",
+      "cost_per_year": 9.272658035034273e-05,
+      "switches_per_year": 0.09272658035034272
+    },
+    "C2_dual_momentum": {
+      "cagr": 0.08878216113818849,
+      "ann_vol": 0.16377253127167435,
+      "sharpe": 0.6048310101395332,
+      "max_drawdown_daily": -0.29068200147853673,
+      "max_drawdown_weekly": -0.2778918876095824,
+      "p_drop_over_30pct_5y": 0.3108,
+      "worst_drop_trough": "2026-08-20",
+      "cost_per_year": 0.004358149276466111,
+      "switches_per_year": 2.2254379284082253
+    },
+    "C3_multi_asset_trend": {
+      "cagr": 0.06719727189684477,
+      "ann_vol": 0.06598246950059931,
+      "sharpe": 1.0154303593888794,
+      "max_drawdown_daily": -0.09899988575949248,
+      "max_drawdown_weekly": -0.09899988575949226,
+      "p_drop_over_30pct_5y": 0.0,
+      "worst_drop_trough": "2026-03-27",
+      "cost_per_year": 0.0020777294231339076,
+      "switches_per_year": 11.96172886519421
+    },
+    "C4_sp500_2x_trend": {
+      "cagr": 0.13912090682761957,
+      "ann_vol": 0.23691033016170332,
+      "sharpe": 0.669177574274892,
+      "max_drawdown_daily": -0.45351485916244116,
+      "max_drawdown_weekly": -0.4468867210002305,
+      "p_drop_over_30pct_5y": 0.6308,
+      "worst_drop_trough": "2023-03-24",
+      "cost_per_year": 0.019148038842345786,
+      "switches_per_year": 5.470868240670221
+    },
+    "C5_sp500_3x_trend": {
+      "cagr": 0.19978627711589936,
+      "ann_vol": 0.3410401008197864,
+      "sharpe": 0.7073377206821257,
+      "max_drawdown_daily": -0.5799001531257845,
+      "max_drawdown_weekly": -0.5726107086851138,
+      "p_drop_over_30pct_5y": 0.8466,
+      "worst_drop_trough": "2023-03-24",
+      "cost_per_year": 0.010941736481340449,
+      "switches_per_year": 5.470868240670221
+    },
+    "C6_sp500_2x_buy_hold": {
+      "cagr": 0.25665655934590137,
+      "ann_vol": 0.30672657125708025,
+      "sharpe": 0.9000168769513534,
+      "max_drawdown_daily": -0.5811143611822739,
+      "max_drawdown_weekly": -0.5207113828531192,
+      "p_drop_over_30pct_5y": 0.7212,
+      "worst_drop_trough": "2020-03-23",
+      "cost_per_year": 0.0003245430312261995,
+      "switches_per_year": 0.09272658035034272
+    },
+    "info_sp500_1x_trend": {
+      "cagr": 0.10038725739805865,
+      "ann_vol": 0.1239151439473503,
+      "sharpe": 0.8318714089332746,
+      "max_drawdown_daily": -0.2299310127603833,
+      "max_drawdown_weekly": -0.2240693960531135,
+      "p_drop_over_30pct_5y": 0.063,
+      "worst_drop_trough": "2023-03-28",
+      "cost_per_year": 0.0054708682406702245,
+      "switches_per_year": 5.470868240670221
+    },
+    "info_nasdaq_3x_trend": {
+      "cagr": 0.3798860401842621,
+      "ann_vol": 0.44081743977259935,
+      "sharpe": 0.9529596332803318,
+      "max_drawdown_daily": -0.5103691110902995,
+      "max_drawdown_weekly": -0.4844901059530857,
+      "p_drop_over_30pct_5y": 0.9554,
+      "worst_drop_trough": "2020-03-17",
+      "cost_per_year": 0.009458111195734965,
+      "switches_per_year": 4.729055597867479
+    },
+    "info_nasdaq_2x_trend_synthetic": {
+      "cagr": 0.28801269458055057,
+      "ann_vol": 0.31310529735450027,
+      "sharpe": 0.9654653702246941,
+      "max_drawdown_daily": -0.42153595912579767,
+      "max_drawdown_weekly": -0.4005504273042677,
+      "p_drop_over_30pct_5y": 0.68,
+      "worst_drop_trough": "2020-03-17",
+      "cost_per_year": 0.01655169459253619,
+      "switches_per_year": 4.729055597867479
+    },
+    "tx_blend_reference": {
+      "cagr": 0.3046761046651765,
+      "ann_vol": 0.21603884708095492,
+      "sharpe": 1.3425384406221779,
+      "max_drawdown_weekly": -0.2629226509701985,
+      "p_drop_over_30pct_5y": 0.1512
+    },
+    "C7_half_tx_blend_half_C4": {
+      "cagr": 0.22571158900334964,
+      "ann_vol": 0.20126719991029718,
+      "sharpe": 1.114377208134594,
+      "max_drawdown_weekly": -0.2973486781630945,
+      "p_drop_over_30pct_5y": 0.2692
+    }
+  },
+  "weekly_corr_tx_blend_vs_C4": 0.5691657385384122,
+  "long_history_usd": {
+    "sp500_1x_trend": {
+      "cagr": 0.09225117759052348,
+      "ann_vol": 0.11312438947949359,
+      "sharpe": 0.8339770806568635,
+      "max_drawdown_daily": -0.22513538860155335,
+      "max_drawdown_weekly": -0.22237131336683313,
+      "p_drop_over_30pct_5y": 0.0156,
+      "worst_drop_trough": "2023-03-22",
+      "cost_per_year": 0.006587993480622968,
+      "switches_per_year": 6.587993480622963,
+      "worst_drop_by_era": {
+        "1989-1999": -0.13376484195276162,
+        "2000-2009": -0.22276373703409424,
+        "2010-2015": -0.1626352326474202,
+        "2016-2026": -0.22513538860155335
+      }
+    },
+    "sp500_2x_trend": {
+      "cagr": 0.12575489255262973,
+      "ann_vol": 0.2265150673455643,
+      "sharpe": 0.6355018370510991,
+      "max_drawdown_daily": -0.47102626635104017,
+      "max_drawdown_weekly": -0.4709530051505183,
+      "p_drop_over_30pct_5y": 0.5236,
+      "worst_drop_trough": "2002-04-03",
+      "cost_per_year": 0.023057977182180233,
+      "switches_per_year": 6.587993480622963,
+      "worst_drop_by_era": {
+        "1989-1999": -0.3146779271485566,
+        "2000-2009": -0.47102626635104017,
+        "2010-2015": -0.31442421637301254,
+        "2016-2026": -0.4410445548816322
+      }
+    },
+    "sp500_3x_trend": {
+      "cagr": 0.1804097416979935,
+      "ann_vol": 0.3387314672001916,
+      "sharpe": 0.6596170891165422,
+      "max_drawdown_daily": -0.6193057816695585,
+      "max_drawdown_weekly": -0.6192530567161401,
+      "p_drop_over_30pct_5y": 0.8766,
+      "worst_drop_trough": "2002-04-03",
+      "cost_per_year": 0.013175986961245936,
+      "switches_per_year": 6.587993480622963,
+      "worst_drop_by_era": {
+        "1989-1999": -0.4397674659208892,
+        "2000-2009": -0.6193057816695585,
+        "2010-2015": -0.42545165110313965,
+        "2016-2026": -0.5669340548760498
+      }
+    },
+    "sp500_buy_hold": {
+      "cagr": 0.11443267491541476,
+      "ann_vol": 0.16521681284303066,
+      "sharpe": 0.736715111381137,
+      "max_drawdown_daily": -0.5525024106969596,
+      "max_drawdown_weekly": -0.5471148236255718,
+      "p_drop_over_30pct_5y": 0.2736,
+      "worst_drop_trough": "2009-03-09",
+      "cost_per_year": 0.0,
+      "switches_per_year": 0.026457805143064107,
+      "worst_drop_by_era": {
+        "1989-1999": -0.19185795842299125,
+        "2000-2009": -0.5525024106969596,
+        "2010-2015": -0.3045201877475239,
+        "2016-2026": -0.3379046365187174
+      }
+    },
+    "sp500_2x_buy_hold": {
+      "cagr": 0.1617038667000017,
+      "ann_vol": 0.3297752678081108,
+      "sharpe": 0.6206080976017317,
+      "max_drawdown_daily": -0.8741231073152191,
+      "max_drawdown_weekly": -0.8715598570870702,
+      "p_drop_over_30pct_5y": 0.8496,
+      "worst_drop_trough": "2009-03-09",
+      "cost_per_year": 0.0,
+      "switches_per_year": 0.026457805143064107,
+      "worst_drop_by_era": {
+        "1989-1999": -0.3643980508810004,
+        "2000-2009": -0.8741231073152191,
+        "2010-2015": -0.7184122632482409,
+        "2016-2026": -0.5910857321453173
+      }
+    }
+  },
+  "gates": {
+    "C1_sp500_buy_hold": {
+      "beats_cagr": false,
+      "drop_ok": true,
+      "risk_ok": true,
+      "risk_used": 0.0526,
+      "candidate": false
+    },
+    "C2_dual_momentum": {
+      "beats_cagr": false,
+      "drop_ok": true,
+      "risk_ok": false,
+      "risk_used": 0.3108,
+      "candidate": false
+    },
+    "C3_multi_asset_trend": {
+      "beats_cagr": false,
+      "drop_ok": true,
+      "risk_ok": true,
+      "risk_used": 0.0,
+      "candidate": false
+    },
+    "C4_sp500_2x_trend": {
+      "beats_cagr": false,
+      "drop_ok": false,
+      "risk_ok": false,
+      "risk_used": 0.5236,
+      "candidate": false
+    },
+    "C5_sp500_3x_trend": {
+      "beats_cagr": false,
+      "drop_ok": false,
+      "risk_ok": false,
+      "risk_used": 0.8766,
+      "candidate": false
+    }
+  }
+}

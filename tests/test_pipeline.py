@@ -208,3 +208,19 @@ def test_history_and_market_inputs_ignore_the_future(cfg, signal_market):
     pd.testing.assert_frame_equal(full_m.loc[:T], part_m)
     recent = full_h.loc["2018-01-01":]
     assert recent.notna().mean().min() > 0.9 and full_m.abs().max().max() <= 1
+
+
+def test_daily_calendar_matches_the_weekly_panel_on_fridays(cfg, noise_market):
+    """The daily panel (research/daily_trial.py) gives each Friday the same features as the weekly one."""
+    from wq.data import to_base
+    from wq.features import build_panel, daily_calendar
+    close, volume, fx, universe = noise_market
+    weekly, cal_w, _ = prepare(cfg, close, volume, fx, universe)
+    px = to_base(close, universe["currency"], fx, cfg["account"]["base_currency"])
+    daily, cal_d, _ = build_panel(px, volume, universe, cfg, calendar=daily_calendar)
+    assert (cal_d["exec_date"].iloc[:-1].to_numpy() == cal_d.index[1:].to_numpy()).all()
+    cols = FEATURES + ["raw_vol_60"]
+    fridays = weekly.index.get_level_values("date").unique()[-50:]
+    a = weekly[weekly.index.get_level_values("date").isin(fridays)][cols]
+    b = daily.reindex(a.index)[cols]
+    pd.testing.assert_frame_equal(a, b)

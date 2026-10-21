@@ -1,0 +1,81 @@
+{
+  "run_at": "2026-10-21T20:50:11+00:00",
+  "arms": {
+    "weekly": {
+      "cagr": 0.30467610466517625,
+      "sharpe": 1.3425384406221774,
+      "max_drawdown": -0.2629226509701985,
+      "cost_per_year": 0.006309184798521982,
+      "turnover_per_week": 0.038227312200875066,
+      "p_drop_over_30pct_5y": 0.1512
+    },
+    "every4_offset0": {
+      "cagr": 0.3190969611912189,
+      "sharpe": 1.3907264349469775,
+      "max_drawdown": -0.2639525102157494,
+      "cost_per_year": 0.005759258404075757,
+      "turnover_per_week": 0.03409828466501692,
+      "p_drop_over_30pct_5y": 0.1362,
+      "diff_per_year": 0.011175684667987273,
+      "nw_t_alone": 0.9043946642280732
+    },
+    "every4_offset1": {
+      "cagr": 0.29694496122275726,
+      "sharpe": 1.3340870876955881,
+      "max_drawdown": -0.2833973476872179,
+      "cost_per_year": 0.00453664588611611,
+      "turnover_per_week": 0.02761133110161272,
+      "p_drop_over_30pct_5y": 0.1664,
+      "diff_per_year": -0.00669423827714678,
+      "nw_t_alone": -0.43146500842104807
+    },
+    "every4_offset2": {
+      "cagr": 0.24876122575192428,
+      "sharpe": 1.2272182715238753,
+      "max_drawdown": -0.28407441534905953,
+      "cost_per_year": 0.004583103524925016,
+      "turnover_per_week": 0.02726183348272909,
+      "p_drop_over_30pct_5y": 0.153,
+      "diff_per_year": -0.04780993355025753,
+      "nw_t_alone": -2.394349394346826
+    },
+    "every4_offset3": {
+      "cagr": 0.29821441891951106,
+      "sharpe": 1.3528323924214758,
+      "max_drawdown": -0.23730156764527,
+      "cost_per_year": 0.00500952867017497,
+      "turnover_per_week": 0.02993833685589029,
+      "p_drop_over_30pct_5y": 0.1214,
+      "diff_per_year": -0.0063268641299863105,
+      "nw_t_alone": -0.39610348709406235
+    },
+    "every2_offset0": {
+      "cagr": 0.3088091582984034,
+      "sharpe": 1.3575793413607322,
+      "max_drawdown": -0.2657243252489129,
+      "cost_per_year": 0.005563289970810145,
+      "turnover_per_week": 0.03373916030986138,
+      "p_drop_over_30pct_5y": 0.165,
+      "diff_per_year": 0.003184582960679689,
+      "nw_t_alone": 0.3531119852294886
+    },
+    "every2_offset1": {
+      "cagr": 0.2957516541270522,
+      "sharpe": 1.3375108288157083,
+      "max_drawdown": -0.2689438195294104,
+      "cost_per_year": 0.005528075233633851,
+      "turnover_per_week": 0.03322747174710509,
+      "p_drop_over_30pct_5y": 0.142,
+      "diff_per_year": -0.007939771670494821,
+      "nw_t_alone": -0.49376591048352425
+    }
+  },
+  "gate": {
+    "diff_per_year": -0.012413837822350839,
+    "nw_t": -1.044266223419509,
+    "weeks": 561,
+    "all_beat_weekly_cagr": false,
+    "all_drops_ok": true,
+    "pass": false
+  }
+}

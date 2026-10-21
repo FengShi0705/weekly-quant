@@ -37,6 +37,12 @@ def weekly_calendar(daily_index):
     return pd.DataFrame({"exec_date": exec_dates}, index=pd.DatetimeIndex(signal, name="date"))
 
 
+def daily_calendar(daily_index):
+    """Every trading day as a signal date, filled at the next trading day's close."""
+    idx = pd.DatetimeIndex(daily_index).sort_values()
+    return pd.DataFrame({"exec_date": list(idx[1:]) + [pd.NaT]}, index=pd.DatetimeIndex(idx, name="date"))
+
+
 def _daily_features(px, volume):
     r = px.pct_change(fill_method=None)
     mkt = r.mean(axis=1)
@@ -79,13 +85,14 @@ def market_index(px):
     return (1 + r).cumprod()
 
 
-def build_panel(px_base, volume, universe, cfg):
+def build_panel(px_base, volume, universe, cfg, calendar=weekly_calendar):
     """Long panel indexed by (date, ticker) with ranked features, eligibility and forward returns.
 
-    px_base: daily close in base currency (tickers as columns).
+    px_base: daily close in base currency (tickers as columns). calendar: weekly_calendar, or
+    daily_calendar for a signal every trading day (then "1w" labels and "week" numbers count days).
     """
     px = px_base.sort_index().ffill(limit=5)
-    cal = weekly_calendar(px.index)
+    cal = calendar(px.index)
     feats, dv = _daily_features(px, volume)
 
     ucfg = cfg["universe"]

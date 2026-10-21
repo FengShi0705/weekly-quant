@@ -1,0 +1,44 @@
+{
+  "run_at": "2026-10-21T20:43:18+00:00",
+  "friday_check_max_diff": 2.384185791015625e-07,
+  "arms": {
+    "weekly": {
+      "cagr": 0.30467610466517625,
+      "ann_vol": 0.21603884708095497,
+      "sharpe": 1.3425384406221774,
+      "max_drawdown": -0.2629226509701985,
+      "cost_per_year": 0.006309184798521982,
+      "turnover_per_week": 0.038227312200875066,
+      "days_with_trades_per_year": 17.672597864768683,
+      "p_drop_over_30pct_5y": 0.1512
+    },
+    "daily": {
+      "cagr": 0.29446809629356685,
+      "ann_vol": 0.2118805445708219,
+      "sharpe": 1.3277999532404965,
+      "max_drawdown": -0.27941892112510747,
+      "cost_per_year": 0.006244872176464671,
+      "turnover_per_week": 0.03784210955847048,
+      "days_with_trades_per_year": 22.206405693950177,
+      "p_drop_over_30pct_5y": 0.1722
+    },
+    "every4_info": {
+      "cagr": 0.3235209704125577,
+      "sharpe": 1.5375413559612445,
+      "max_drawdown_4weekly": -0.23139325440635095,
+      "cost_per_year": 0.005759258404075757
+    }
+  },
+  "gate": {
+    "diff_mean_weekly": -0.00016741307115711703,
+    "diff_per_year": -0.008705479700170085,
+    "nw_t": -0.5230841752086847,
+    "weeks": 561,
+    "pass": false
+  },
+  "orders": {
+    "weekly": 526,
+    "daily": 517,
+    "every4": 415
+  }
+}
