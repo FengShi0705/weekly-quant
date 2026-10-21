@@ -110,3 +110,20 @@ of 30.5% but comes within a few points with lower risk is reported as competitiv
 - **Short-window bias:** a strong US bull market favours anything holding the S&P 500, and above all
   the leveraged arms. That is why C4/C5 need the 1988–2026 risk check (which includes 2000–02 and 2008).
 - **Universe bias:** Tests A and B inherit the hand-picked universe's survivorship bias.
+
+## Addendum, 21 Oct 2026: B2, trading every 4 weeks (`research/frequency_trial.py`)
+
+Added after test B, before running B2. Test B's information arm (orders every fourth Monday, starting
+from the first week) made 32.4% a year against weekly `tx_blend`'s 30.5%, with almost the same costs (0.58%
+vs 0.63% a year). One schedule cannot separate an effect from path noise, so B2 runs all four
+starting weeks. Disclosure: the first of the four is the information arm already seen.
+
+- **Arms:** `tx_blend` scores and rules as they are. Orders are placed only every fourth week (offsets
+  0, 1, 2, 3). The account is valued every week, with dividend tax charged every week as usual.
+- **Primary:** each offset's weekly net return minus weekly `tx_blend`'s, averaged across the four offsets
+  week by week. Newey–West t (4 lags).
+- **Pass** if t ≥ 2.0, every offset's worst drop is no worse than −30%, and every offset's CAGR is above
+  weekly `tx_blend`'s.
+- **After a pass:** it joins paper trading as `tx_blend_4w`. Fewer order batches would also make the
+  human approval of live orders easier.
+- **Information only:** every 2 weeks (offsets 0, 1).
