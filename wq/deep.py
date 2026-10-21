@@ -46,6 +46,7 @@ class Stage1Config:
     use_categories: bool = True     # False: country, sector and currency ids are blanked (ablation)
     refit_anchor: str = "2016-01-08"  # first walk-forward week; refits fall every refit_every_weeks from it
     save_dir: str = ""              # if set, each refit's model is saved there (for Stage 2)
+    label_horizon: int = 1          # weeks the panel's label spans (features.build_panel's label_horizon_weeks)
     features: list = field(default_factory=lambda: list(FEATURES))
 
 
@@ -229,8 +230,9 @@ def _train(train_weeks, n_feat, vocab, cfg, seed, epochs=None, val_weeks=None):
     return model, best_ep
 
 
-def refit_plan(weeks, pred_dates, cfg, horizon=1):
+def refit_plan(weeks, pred_dates, cfg, horizon=None):
     """[(train weeks, val weeks, prediction weeks)] for each refit, with no look-ahead."""
+    horizon = cfg.label_horizon if horizon is None else horizon
     by_date = {w.date: w for w in weeks}
     pred = [by_date[d] for d in pred_dates if d in by_date]
     plan, i = [], 0
@@ -241,7 +243,7 @@ def refit_plan(weeks, pred_dates, cfg, horizon=1):
         chunk = [w for w in pred[i:] if w.week < iT + cfg.refit_every_weeks]
         if len(window) >= cfg.min_train_weeks:
             cut = hi - cfg.val_weeks
-            fit_w = [w for w in window if w.week < cut]          # one-week purge before validation
+            fit_w = [w for w in window if w.week + horizon <= cut]   # fit labels end before validation
             val_w = [w for w in window if w.week > cut]
             plan.append((window, fit_w, val_w, chunk))
         i += len(chunk)

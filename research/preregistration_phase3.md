@@ -154,3 +154,28 @@ tried with longer labels.
 Blocked, so not run: point-in-time US fundamentals from SEC XBRL (the SEC requires a contact email in
 every request, which needs the account owner's consent) and Yahoo analyst rating changes (the endpoint
 is refusing requests; to be retried).
+
+## Addendum, 21 Oct 2026: E (longer training window) and F (portfolio settings for the transformer)
+
+Added while D was running, before any D, E or F result.
+
+**E. Ten years of training history** (`research/window_trial.py`). Stage 1 trains on the last 260 weeks,
+the same window as LightGBM. With data from 2010, up to 520 weeks are available by the 2020s.
+- **Change:** the Stage 1 transformer with `train_window_weeks` = 520. The window grows until it reaches
+  10 years; the minimum is still 156 weeks. Nothing else changes. Seeds 0–2.
+- **Primary:** paired weekly 1-week IC of the smoothed scores against Stage 1 run 1, Newey–West t (4 lags).
+- **Pass** if t ≥ 2.0 and the traded blend (sector cap 5) has a backtest worst drop no worse than −30%.
+- **After a pass:** a 10-seed re-run must keep the sign (t > 1).
+
+**F. Hold band and score smoothing re-tuned for `tx_blend`** (`research/settings_trial.py`). The top-150
+hold band and 4-week score average were chosen for LightGBM on Jan 2016 – Jun 2024 (PLAN.md §13). The
+transformer's scores may behave differently.
+- **Fixed:** the 10-seed scores, the 0.7/0.3 blend and the sector cap 5.
+- **Variants:** F1 hold band 90, F2 hold band 120, F3 2-week score average, F4 8-week score average.
+- **Primary:** the paired weekly net-return difference against `tx_blend` (band 150, 4 weeks),
+  Newey–West t (4 lags).
+- **Pass** if all three hold:
+  - t ≥ 2.5 (four variants);
+  - the difference is positive in each of 2016–18, 2019–21 and 2022–26;
+  - the worst drop is no worse than −30%.
+- **After a pass:** it joins paper trading as a `tx_blend` variant.

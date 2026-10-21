@@ -83,6 +83,22 @@ def test_refit_plan_never_looks_ahead(cfg, signal_market):
     assert len(predicted) == len(set(predicted))                  # each week scored by one refit
 
 
+@pytest.mark.parametrize("h", [4, 13])
+def test_refit_plan_purges_multi_week_labels(cfg, signal_market, h):
+    """With h-week labels (research/horizon_trial.py), a training week's label must have ended by the
+    prediction date, and every fit label before the validation block starts."""
+    close, volume, fx, universe = signal_market
+    panel, cal, _ = prepare(cfg, close, volume, fx, universe)
+    weeks, _ = deep.build_weeks(panel, universe)
+    dates = [d for d in cal.index if d >= pd.Timestamp("2016-01-01")][:-1]
+    plan = deep.refit_plan(weeks, dates, deep.Stage1Config(label_horizon=h))
+    assert len(plan) > 5
+    for window, fit_w, val_w, chunk in plan:
+        first = chunk[0].week
+        assert max(w.week for w in window) + h <= first - 1      # label ends at exec(t + h) <= signal(T)
+        assert max(w.week for w in fit_w) + h < min(w.week for w in val_w)
+
+
 def test_padding_and_account_slots_do_not_change_scores(cfg, signal_market):
     close, volume, fx, universe = signal_market
     panel, _, _ = prepare(cfg, close, volume, fx, universe)
