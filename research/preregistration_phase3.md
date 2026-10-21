@@ -127,3 +127,30 @@ starting weeks. Disclosure: the first of the four is the information arm already
 - **After a pass:** it joins paper trading as `tx_blend_4w`. Fewer order batches would also make the
   human approval of live orders easier.
 - **Information only:** every 2 weeks (offsets 0, 1).
+
+## Addendum, 21 Oct 2026: D, transformer labels matched to the holding period (`research/horizon_trial.py`)
+
+Added after tests A–C, before writing D. `tx_blend` keeps a holding for about 8 months on average (about
+18 swaps a year across 15 names). Its transformer is trained to rank next week's returns. Phase 1 tested
+4-week labels for LightGBM only, on the tuning period, and kept 1 week; the transformer has never been
+tried with longer labels.
+
+- **Variants:** D4 and D13. The Stage 1 transformer, everything unchanged, except that the label is the
+  rank of the return from the next Monday's close over 4 (D4) or 13 (D13) weeks. Seeds 0–2.
+- **Purge:** a training week is used only once its label is known (t + h ≤ T − 1), and the inner
+  validation block starts after the last fit week's label has ended.
+- **Compared with** Stage 1 run 1 (seeds 0–2, 1-week labels).
+- **Primary:** the paired weekly IC of the smoothed scores against the h-week forward return. Newey–West
+  t with 2h lags, because the returns overlap.
+- **Pass** if all three hold:
+  - t ≥ 2.3 (two variants);
+  - the 1-week IC is not significantly worse (t > −2);
+  - the traded blend (0.7 transformer + 0.3 momentum, sector cap 5, today's rules) has a backtest worst
+    drop no worse than −30%.
+- **After a pass:** a 10-seed re-run must keep the sign (t > 1). The variant then joins paper trading.
+- **Reported, not used to decide:** the backtest, and the paired weekly net-return difference against
+  `tx_blend`.
+
+Blocked, so not run: point-in-time US fundamentals from SEC XBRL (the SEC requires a contact email in
+every request, which needs the account owner's consent) and Yahoo analyst rating changes (the endpoint
+is refusing requests; to be retried).
