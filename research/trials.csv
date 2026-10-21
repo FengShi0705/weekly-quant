@@ -21,3 +21,7 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-21T20:50:11+00:00,phase3,B2_every_4_weeks,every4,10,561,,,-1.044266223419509,False,pre-registered Phase 3 test B2
 2026-10-21T21:38:21+00:00,phase3,A_earnings_tx,earnings,3,561,0.030610826675692336,0.03287450254393007,-1.0863104280392784,False,pre-registered Phase 3 test A
 2026-10-21T22:15:12+00:00,phase3,A_earnings_lgbm_secondary,earnings,5,561,0.021169911941668017,0.018847330732438248,1.2980631371156346,False,Phase 3 test A secondary (information)
+2026-10-21T22:24:07+00:00,phase3,F_F1_hold_90,F1_hold_90,10,,,,-0.7474088180697256,False,pre-registered Phase 3 test F
+2026-10-21T22:24:07+00:00,phase3,F_F2_hold_120,F2_hold_120,10,,,,0.7999341250862859,False,pre-registered Phase 3 test F
+2026-10-21T22:24:07+00:00,phase3,F_F3_smooth_2,F3_smooth_2,10,,,,1.62719168531805,False,pre-registered Phase 3 test F
+2026-10-21T22:24:07+00:00,phase3,F_F4_smooth_8,F4_smooth_8,10,,,,-0.7348948881504971,False,pre-registered Phase 3 test F
