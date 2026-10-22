@@ -75,6 +75,7 @@ worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000
 | D13. Transformer trained on 13-week returns | paired 13-week IC t ≥ 2.3 vs run 1 | **Fail**: 13-week IC 0.068 vs 0.102, t −2.4 |
 | E. Transformer with up to 10 years of training history | paired IC t ≥ 2 vs run 1 | **Fail**: IC 0.029 vs 0.033, t −1.4, worse in 2016–19 and 2020–26 |
 | F. `tx_blend` hold band 90 / 120, score average 2 / 8 weeks | paired weekly return t ≥ 2.5, ahead in all 3 sub-periods | **Fail**: best is 2-week average, +2.7 pts/yr, t 1.6, behind in 2016–18 |
+| G. Holdings: 10 or 20 names (blend), 10 names (transformer only) | paired weekly return t ≥ 2.4, all 3 sub-periods, drop ≥ −30%, drop risk ≤ 20% | **Fail**: 10 names 33.3%, +2.6 pts/yr, t 1.4, ahead in all sub-periods, drop risk 20.2%; 20 names 26.0%, t −2.2 |
 
 Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
 
@@ -107,16 +108,20 @@ What was learned:
    training signals, and the 4-week score average already turns weekly scores into a slower signal.
 3. **Five years of training history is enough; more hurts.** With up to 10 years the transformer ranked
    worse in both halves of the period. Markets change, and older weeks dilute the recent ones.
-4. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
+4. **Concentration is the closest thing to an improvement, but it is not established.** Returns rise as
+   holdings shrink (20 names 26.0%, 15 names 30.5%, 10 names 33.3%), and 20 names is significantly
+   worse than 15 (t −2.2). That suggests the top of the ranking carries real value. But 10 names beats 15
+   by only t 1.4, and its chance of a drop beyond 30% within 5 years rises to 20%.
+5. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
    (1.2–1.9% a year in costs vs 0.6%) for no reliable gain; neither a shorter nor a longer score average
    beat 4 weeks in every sub-period.
-5. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
+6. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
    with the same costs (0.62% vs 0.63% a year), and 0.9 points a year less. Zero commission doesn't
    matter much here: the costs that bind are the FX fee and stamp duty, which a hold band already keeps low.
-6. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
+7. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
    anything from 24.9% to 31.9% a year depending only on which week the schedule started. A single
    backtest figure is worth about ±3–4 points; only paired tests separate variants.
-7. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
+8. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
    unlevered funds cut drawdowns sharply but returned 7–10% a year in 2016–2026 (fast V-shaped recoveries
    whipsawed them). Leveraged index funds earn more only by taking drops of 45–60%. The survivorship
    bias in `tx_blend`'s backtest (its universe is today's large caps) is real, but it would have to be
@@ -130,7 +135,7 @@ Decisions:
   - its training target and history length;
   - learned trading rules;
   - trading frequency;
-  - the portfolio settings;
+  - the portfolio settings and the number of holdings;
   - free earnings data;
   - index and leveraged ETF strategies.
 - **What is left needs new data, and is your decision:**

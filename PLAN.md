@@ -475,8 +475,8 @@ Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
 
 ## 16. Phase 3 research: other models and strategies (21 Oct 2026)
 
-Eight pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
-for something better than `tx_blend` for a £10,000 Trading 212 ISA. All eight failed:
+Nine pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
+for something better than `tx_blend` for a £10,000 Trading 212 ISA. All nine failed:
 
 | Test | Result |
 |---|---|
@@ -487,6 +487,7 @@ for something better than `tx_blend` for a £10,000 Trading 212 ISA. All eight f
 | Transformer trained on 4- or 13-week returns (closer to the holding period) | ranks those returns worse than the 1-week model (t −1.5, −2.4) |
 | Transformer with up to 10 years of training history | IC 0.029 vs 0.033, t −1.4 |
 | Hold band 90/120 or score average 2/8 weeks for `tx_blend` | best +2.7 pts/yr, t 1.6, not in every sub-period |
+| 10 or 20 holdings instead of 15 | 10 names 33.3% a year, +2.6 pts, t 1.4 (not enough), drop risk 20%; 20 names worse (t −2.2) |
 
 **Takeaways:**
 - **Zero commission doesn't make frequent trading pay.** The FX fee and stamp duty are the costs that
