@@ -244,3 +244,8 @@ short-term price pressure and reversal, mostly in smaller stocks. The prior for 
 - **Information:** the same from 2017.
 - **Pass** if t ≥ 2.0 and the traded blend (sector cap 5) has a worst drop no worse than −30%.
 - **After a pass:** a 10-seed re-run must keep the sign (t > 1).
+
+**I: not run (22 Oct 2026).** Wikimedia answers every request from this environment's shared outbound
+address with HTTP 429 (rate-limited), even single ones. Before the block, 16 article titles had been
+found and no page views downloaded. The code (`wq/attention.py`, tested) and `research/attention_trial.py`
+are ready if it can be run from another network.

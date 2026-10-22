@@ -77,6 +77,7 @@ worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000
 | F. `tx_blend` hold band 90 / 120, score average 2 / 8 weeks | paired weekly return t ≥ 2.5, ahead in all 3 sub-periods | **Fail**: best is 2-week average, +2.7 pts/yr, t 1.6, behind in 2016–18 |
 | G. Holdings: 10 or 20 names (blend), 10 names (transformer only) | paired weekly return t ≥ 2.4, all 3 sub-periods, drop ≥ −30%, drop risk ≤ 20% | **Fail**: 10 names 33.3%, +2.6 pts/yr, t 1.4, ahead in all sub-periods, drop risk 20.2%; 20 names 26.0%, t −2.2 |
 | H. Analyst rating and price-target changes (Yahoo, US stocks only) as transformer inputs | paired IC t ≥ 2 vs run 1 | **Fail**: IC 0.030 vs 0.033, t −1.3; US stocks alone 0.035 vs 0.037, t −0.9 |
+| I. Wikipedia page views (attention) as transformer inputs | paired IC t ≥ 2 vs run 1 | **Not run**: Wikimedia rate-limits this environment's shared network address (HTTP 429 on every request) |
 
 Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
 
@@ -142,6 +143,7 @@ Decisions:
   - the portfolio settings and the number of holdings;
   - free earnings and analyst data;
   - index and leveraged ETF strategies.
+- **Blocked here:** Wikipedia page views (test I). The code is ready to run from another network.
 - **What is left needs new data, and is your decision:**
   - a larger, survivorship-free universe with point-in-time fundamentals (paid data, roughly $20–80 a
     month), which adds breadth and value, quality and revision signals;
