@@ -458,6 +458,16 @@ Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
   (sub-periods, double costs). A higher paper return over a few months is not enough on its own.
 - Stop it at once if it falls 20% from its peak or produces obviously wrong orders.
 
+**A fourth strategy from 24 Oct 2026: `tx_blend_tilt`.** `tx_blend` with score-tilted weights: the
+best-scored holding gets 1.5× the equal weight, falling linearly to 0.5× for the lowest; same 15 names
+and rules (`portfolio.weighting: score_tilt`). In the Phase 3 research (§16) it backtested at 32.8% a
+year against `tx_blend`'s 30.5%. It was ahead in all three sub-periods, with the same worst drop
+(−26.3%) and an 18% chance of a >30% drop within 5 years (15% for `tx_blend`). Its pre-registered test
+missed significance (t 2.23 against 2.4). The same tilt then replicated on LightGBM's `main`: 28.4% vs
+26.1%, t 2.35, ahead in every sub-period, same worst drop. It trades more (about 0.9% a year in costs
+vs 0.6%), because the target weights move with the ranks. Simulated ledger only, under the same rules
+as `tx_blend`: at least 26 weeks before any switch, and stop at once on a 20% fall from peak.
+
 **Review rules, set before any results** (review after 8–12 weeks, mid-December 2026 to mid-January 2027):
 
 - **Twelve weeks of returns cannot pick a winner between the two strategies.** Weekly returns are far too
@@ -475,8 +485,8 @@ Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
 
 ## 16. Phase 3 research: other models and strategies (21 Oct 2026)
 
-Twelve pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
-for something better than `tx_blend` for a £10,000 Trading 212 ISA. All twelve failed (a thirteenth, Wikipedia attention, could not run here):
+Thirteen pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
+for something better than `tx_blend` for a £10,000 Trading 212 ISA. Eleven failed, a twelfth (Wikipedia attention) could not run here, and one, score-tilted weights, narrowly missed but then replicated on a second model:
 
 | Test | Result |
 |---|---|
@@ -489,7 +499,7 @@ for something better than `tx_blend` for a £10,000 Trading 212 ISA. All twelve 
 | Hold band 90/120 or score average 2/8 weeks for `tx_blend` | best +2.7 pts/yr, t 1.6, not in every sub-period |
 | 10 or 20 holdings instead of 15 | 10 names 33.3% a year, +2.6 pts, t 1.4 (not enough), drop risk 20%; 20 names worse (t −2.2) |
 | Analyst rating and price-target changes (Yahoo, US only) as transformer inputs | IC 0.030 vs 0.033, t −1.3 |
-| Score-tilted weights (top holding 1.5×, lowest 0.5×) | closest: 32.8% vs 30.5%, t 2.23 vs 2.4 needed, same worst drop |
+| Score-tilted weights (top holding 1.5×, lowest 0.5×) | 32.8% vs 30.5%, t 2.23 (2.4 needed), same worst drop; **replicated on LightGBM `main`** (28.4% vs 26.1%, t 2.35): paper traded as `tx_blend_tilt` (§15) |
 | Let winners run (no trimming) | 40.1% a year but a −37% worst drop, beyond the 30% limit |
 
 **Takeaways:**

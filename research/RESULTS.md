@@ -80,6 +80,7 @@ worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000
 | I. Wikipedia page views (attention) as transformer inputs | paired IC t ≥ 2 vs run 1 | **Not run**: Wikimedia rate-limits this environment's shared network address (HTTP 429 on every request) |
 | J1. Score-tilted weights (best holding 1.5×, lowest 0.5× the equal weight) | paired weekly return t ≥ 2.4, all 3 sub-periods, drop ≥ −30%, drop risk ≤ 20% | **Fail (narrowly)**: 32.8% vs 30.5%, +2.1 pts/yr, t 2.23, ahead in all 3 sub-periods, worst drop −26.3%, drop risk 18% |
 | J2. Let winners run (no trimming above target) | as J1 | **Fail**: 40.1% a year, t 2.16, but worst drop −37.0% and a 52% chance of a >30% drop within 5 years |
+| K. Replication of J1's score tilt on LightGBM `main` | paired weekly return t ≥ 2, all 3 sub-periods, risk limits | **Replicates**: 28.4% vs 26.1%, +2.0 pts/yr, t 2.35, ahead in all 3 sub-periods, worst drop −23.4% (unchanged) |
 
 Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
 
@@ -123,8 +124,9 @@ What was learned:
    weights made +2.1 points a year (t 2.23, just short of the 2.4 bar), in every sub-period, with the
    same worst drop. Letting winners run made far more (40.1% a year) only by concentrating into a few
    winners, with a −37% worst drop that breaks the 30% limit. Together with G, the evidence points one
-   way: the model's top-ranked stocks carry most of the value. But nothing has cleared the bar after
-   this many trials.
+   way: the model's top-ranked stocks carry most of the value. The tilt then replicated on LightGBM's
+   `main` (test K: +2.0 points a year, t 2.35, every sub-period), so it is paper traded as
+   `tx_blend_tilt`. The costs are higher (0.9% vs 0.6% a year): target weights move with the ranks.
 6. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
    (1.2–1.9% a year in costs vs 0.6%) for no reliable gain; neither a shorter nor a longer score average
    beat 4 weeks in every sub-period.
@@ -142,7 +144,10 @@ What was learned:
 
 Decisions:
 
-- Nothing changes in paper trading. `tx_blend` stays the candidate next to `main`.
+- **One change: `tx_blend_tilt` joins the simulated paper ledger from 24 Oct 2026** (K's pre-registered
+  consequence). It is `tx_blend` with score-tilted weights. It does not go into the Trading 212 Practice
+  account or the ISA. `main` is unchanged until its own review, where the tilt is a candidate change.
+- Everything else stays: `tx_blend` stays the candidate next to `main`.
 - **Exhausted with the data we have:**
   - the network and its inputs;
   - its training target and history length;
