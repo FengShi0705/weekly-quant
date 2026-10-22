@@ -179,3 +179,25 @@ transformer's scores may behave differently.
   - the difference is positive in each of 2016–18, 2019–21 and 2022–26;
   - the worst drop is no worse than −30%.
 - **After a pass:** it joins paper trading as a `tx_blend` variant.
+
+## Addendum, 22 Oct 2026: G, number of holdings for the transformer (`research/positions_trial.py`)
+
+Added after tests A–F, before running G. `tx_blend` turns over about 4% a week, so its return is set by
+which names it holds rather than how it trades; with the ranker at its limit, concentration is the lever
+left on this data. In Phase 1b (LightGBM), ML only with 10 names beat 15 names in the tuning period
+(35.9% vs 29.0%) and the holdout (20.8% vs 17.0%). `ml_only_10` is paper traded for that reason. The
+transformer's equivalent has not been tested.
+
+- **Fixed:** the 10-seed scores and today's rules. The sector cap scales with the number of holdings,
+  about a third of it.
+- **Variants:**
+  - G1: 0.7/0.3 blend, 10 names, at most 4 per sector;
+  - G2: 0.7/0.3 blend, 20 names, at most 7 per sector;
+  - G3: transformer only (no momentum), 10 names, at most 4 per sector, the counterpart of `ml_only_10`.
+- **Primary:** the paired weekly net-return difference against `tx_blend`, Newey–West t (4 lags).
+- **Pass** if all of these hold:
+  - t ≥ 2.4 (three variants);
+  - the difference is positive in each of 2016–18, 2019–21 and 2022–26;
+  - your limit holds: a backtest worst drop no worse than −30%, and a bootstrap chance of a drop beyond
+    30% within 5 years no higher than 20% (`tx_blend`: 15%).
+- **After a pass:** it joins paper trading.
