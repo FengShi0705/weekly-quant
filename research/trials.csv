@@ -32,3 +32,5 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-22T03:24:47+00:00,phase3,G_G2_blend_20,G2_blend_20,10,,,,-2.2175573622808735,False,"CAGR 0.260 vs 0.305, MDD -0.281, P(>30% in 5y) 0.152"
 2026-10-22T03:24:47+00:00,phase3,G_G3_tx_only_10,G3_tx_only_10,10,,,,0.7490087469697699,False,"CAGR 0.329 vs 0.305, MDD -0.280, P(>30% in 5y) 0.232"
 2026-10-22T04:15:01+00:00,phase3,H_analyst_tx,analyst,3,561,0.030384456163755548,0.03287450254393007,-1.2619623580463177,False,pre-registered Phase 3 test H
+2026-10-22T04:55:11+00:00,phase3,J_J1_score_tilt,J1_score_tilt,10,,,,2.232503957498032,False,"CAGR 0.328 vs 0.305, MDD -0.263, P(>30% in 5y) 0.181"
+2026-10-22T04:55:11+00:00,phase3,J_J2_no_trim,J2_no_trim,10,,,,2.158072911509621,False,"CAGR 0.401 vs 0.305, MDD -0.370, P(>30% in 5y) 0.520"

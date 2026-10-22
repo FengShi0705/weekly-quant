@@ -78,6 +78,8 @@ worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000
 | G. Holdings: 10 or 20 names (blend), 10 names (transformer only) | paired weekly return t ≥ 2.4, all 3 sub-periods, drop ≥ −30%, drop risk ≤ 20% | **Fail**: 10 names 33.3%, +2.6 pts/yr, t 1.4, ahead in all sub-periods, drop risk 20.2%; 20 names 26.0%, t −2.2 |
 | H. Analyst rating and price-target changes (Yahoo, US stocks only) as transformer inputs | paired IC t ≥ 2 vs run 1 | **Fail**: IC 0.030 vs 0.033, t −1.3; US stocks alone 0.035 vs 0.037, t −0.9 |
 | I. Wikipedia page views (attention) as transformer inputs | paired IC t ≥ 2 vs run 1 | **Not run**: Wikimedia rate-limits this environment's shared network address (HTTP 429 on every request) |
+| J1. Score-tilted weights (best holding 1.5×, lowest 0.5× the equal weight) | paired weekly return t ≥ 2.4, all 3 sub-periods, drop ≥ −30%, drop risk ≤ 20% | **Fail (narrowly)**: 32.8% vs 30.5%, +2.1 pts/yr, t 2.23, ahead in all 3 sub-periods, worst drop −26.3%, drop risk 18% |
+| J2. Let winners run (no trimming above target) | as J1 | **Fail**: 40.1% a year, t 2.16, but worst drop −37.0% and a 52% chance of a >30% drop within 5 years |
 
 Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
 
@@ -117,16 +119,22 @@ What was learned:
    holdings shrink (20 names 26.0%, 15 names 30.5%, 10 names 33.3%), and 20 names is significantly
    worse than 15 (t −2.2). That suggests the top of the ranking carries real value. But 10 names beats 15
    by only t 1.4, and its chance of a drop beyond 30% within 5 years rises to 20%.
-5. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
+5. **The strongest lead: weight the top picks more, within today's 15 names and risk.** Score-tilted
+   weights made +2.1 points a year (t 2.23, just short of the 2.4 bar), in every sub-period, with the
+   same worst drop. Letting winners run made far more (40.1% a year) only by concentrating into a few
+   winners, with a −37% worst drop that breaks the 30% limit. Together with G, the evidence points one
+   way: the model's top-ranked stocks carry most of the value. But nothing has cleared the bar after
+   this many trials.
+6. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
    (1.2–1.9% a year in costs vs 0.6%) for no reliable gain; neither a shorter nor a longer score average
    beat 4 weeks in every sub-period.
-6. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
+7. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
    with the same costs (0.62% vs 0.63% a year), and 0.9 points a year less. Zero commission doesn't
    matter much here: the costs that bind are the FX fee and stamp duty, which a hold band already keeps low.
-7. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
+8. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
    anything from 24.9% to 31.9% a year depending only on which week the schedule started. A single
    backtest figure is worth about ±3–4 points; only paired tests separate variants.
-8. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
+9. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
    unlevered funds cut drawdowns sharply but returned 7–10% a year in 2016–2026 (fast V-shaped recoveries
    whipsawed them). Leveraged index funds earn more only by taking drops of 45–60%. The survivorship
    bias in `tx_blend`'s backtest (its universe is today's large caps) is real, but it would have to be
@@ -140,7 +148,7 @@ Decisions:
   - its training target and history length;
   - learned trading rules;
   - trading frequency;
-  - the portfolio settings and the number of holdings;
+  - the portfolio settings, the number of holdings and their weights;
   - free earnings and analyst data;
   - index and leveraged ETF strategies.
 - **Blocked here:** Wikipedia page views (test I). The code is ready to run from another network.

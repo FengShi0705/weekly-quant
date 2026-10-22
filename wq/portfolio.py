@@ -71,6 +71,12 @@ def select_targets(scores, held, meta, price, equity, cfg, exposure=1.0, vol=Non
             break
         if t not in selected and buyable(t):
             add(t)
+    if p.get("weighting", "equal") == "score_tilt" and len(selected) > 1:
+        # Best-scored holding 1.5x the equal weight, falling linearly to 0.5x for the lowest; same total.
+        k = len(selected)
+        order = sorted(selected, key=rank.get)
+        tilt = {t: 1.5 - i / (k - 1) for i, t in enumerate(order)}
+        return {t: weight * tilt[t] for t in selected}
     if p.get("weighting", "equal") == "inverse_vol" and vol is not None and selected:
         inv = (1 / vol.reindex(selected)).fillna((1 / vol.reindex(selected)).median())
         k = len(selected)
@@ -118,6 +124,8 @@ def generate_orders(shares, targets, price, equity, meta, cfg, cash=0.0):
         in_band = abs(cur_val - tgt_val) <= p["rebalance_drift"] * tgt_val
         if cur > 0 and in_band and not (idle and tgt_val > cur_val):
             continue
+        if cur > 0 and cur_val > tgt_val and not p.get("trim_overweight", True):
+            continue                                        # let a winner run
         whole = _whole_units(meta, t, cfg)
         qty = quantize((tgt_val - cur_val) / px, int(meta.loc[t, "lot_size"]), whole)
         if abs(qty * px) < p["min_trade_value"] or qty == 0:

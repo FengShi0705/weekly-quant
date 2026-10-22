@@ -87,3 +87,25 @@ def test_inverse_vol_weighting(cfg, meta):
     assert sum(t.values()) == pytest.approx(1.0)
     assert t["CCC.L"] > t["AAA"]  # calmer stock gets more
     assert t["AAA"] >= 0.5 / 2 - 1e-9  # but never below half the equal weight
+
+
+def test_score_tilt_weighting(cfg, meta):
+    cfg["portfolio"].update(n_positions=3, hold_rank=4, max_per_country=3, max_per_sector=5,
+                            weighting="score_tilt", cash_buffer=0.0)
+    price = pd.Series({"AAA": 100, "BBB": 50, "CCC.L": 10, "7203.T": 20, "DDD.DE": 80})
+    scores = pd.Series({"AAA": 0.9, "CCC.L": 0.8, "DDD.DE": 0.5, "BBB": 0.1, "7203.T": 0.0})
+    t = select_targets(scores, {"DDD.DE"}, meta, price, 100000, cfg)
+    assert sum(t.values()) == pytest.approx(1.0)
+    assert t["AAA"] == pytest.approx(1.5 / 3) and t["CCC.L"] == pytest.approx(1 / 3)
+    assert t["DDD.DE"] == pytest.approx(0.5 / 3)             # an incumbent is tilted by its score too
+
+
+def test_winners_are_kept_without_trimming(cfg, meta):
+    cfg["portfolio"].update(rebalance_drift=0.3, min_trade_value=1, max_idle_cash=1.0)
+    price = pd.Series({"AAA": 100.0, "BBB": 100.0})
+    shares, targets, equity = {"AAA": 8.0, "BBB": 2.0}, {"AAA": 0.5, "BBB": 0.5}, 1000.0
+    trimmed = generate_orders(shares, targets, price, equity, meta, cfg)
+    assert {(o["ticker"], o["side"]) for o in trimmed} == {("AAA", "sell"), ("BBB", "buy")}
+    cfg["portfolio"]["trim_overweight"] = False
+    kept = generate_orders(shares, targets, price, equity, meta, cfg)
+    assert [(o["ticker"], o["side"]) for o in kept] == [("BBB", "buy")]

@@ -475,8 +475,8 @@ Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
 
 ## 16. Phase 3 research: other models and strategies (21 Oct 2026)
 
-Ten pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
-for something better than `tx_blend` for a £10,000 Trading 212 ISA. All ten failed:
+Twelve pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
+for something better than `tx_blend` for a £10,000 Trading 212 ISA. All twelve failed (a thirteenth, Wikipedia attention, could not run here):
 
 | Test | Result |
 |---|---|
@@ -489,6 +489,8 @@ for something better than `tx_blend` for a £10,000 Trading 212 ISA. All ten fai
 | Hold band 90/120 or score average 2/8 weeks for `tx_blend` | best +2.7 pts/yr, t 1.6, not in every sub-period |
 | 10 or 20 holdings instead of 15 | 10 names 33.3% a year, +2.6 pts, t 1.4 (not enough), drop risk 20%; 20 names worse (t −2.2) |
 | Analyst rating and price-target changes (Yahoo, US only) as transformer inputs | IC 0.030 vs 0.033, t −1.3 |
+| Score-tilted weights (top holding 1.5×, lowest 0.5×) | closest: 32.8% vs 30.5%, t 2.23 vs 2.4 needed, same worst drop |
+| Let winners run (no trimming) | 40.1% a year but a −37% worst drop, beyond the 30% limit |
 
 **Takeaways:**
 - **Zero commission doesn't make frequent trading pay.** The FX fee and stamp duty are the costs that
