@@ -25,3 +25,5 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-21T22:24:07+00:00,phase3,F_F2_hold_120,F2_hold_120,10,,,,0.7999341250862859,False,pre-registered Phase 3 test F
 2026-10-21T22:24:07+00:00,phase3,F_F3_smooth_2,F3_smooth_2,10,,,,1.62719168531805,False,pre-registered Phase 3 test F
 2026-10-21T22:24:07+00:00,phase3,F_F4_smooth_8,F4_smooth_8,10,,,,-0.7348948881504971,False,pre-registered Phase 3 test F
+2026-10-21T23:08:29+00:00,phase3,D_labels_4w,horizon4,3,558,0.054474706643678025,0.06429565395593606,-1.5480143578246863,False,pre-registered Phase 3 test D4
+2026-10-21T23:48:59+00:00,phase3,D_labels_13w,horizon13,3,549,0.06832471607303245,0.10206733465262183,-2.4037607301218604,False,pre-registered Phase 3 test D13

@@ -1,0 +1,25 @@
+{
+  "run_at": "2026-10-21T23:08:29+00:00",
+  "horizon_weeks": 4,
+  "gate": {
+    "ic_4w_variant": 0.054474706643678025,
+    "ic_4w_reference": 0.06429565395593606,
+    "diff": -0.00982094731225804,
+    "nw_t": -1.5480143578246863,
+    "weeks": 558,
+    "ic_1w_variant": 0.028220778505982997,
+    "ic_1w_reference": 0.03287450254393007,
+    "ic_1w_nw_t": -1.2569314462773347,
+    "pass": false
+  },
+  "backtest": {
+    "cagr": 0.2743268441993596,
+    "sharpe": 1.2649092221283436,
+    "max_drawdown": -0.24907170696176706,
+    "turnover": 0.04644466310543509,
+    "p_drop_over_30pct_5y": 0.1248,
+    "run1_blend_cagr": 0.2997092722067105,
+    "weekly_return_diff_per_year_vs_run1_blend": -0.019514640492398625,
+    "weekly_return_diff_nw_t": -0.7706360352534612
+  }
+}
