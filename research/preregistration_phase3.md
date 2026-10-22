@@ -249,3 +249,24 @@ short-term price pressure and reversal, mostly in smaller stocks. The prior for 
 address with HTTP 429 (rate-limited), even single ones. Before the block, 16 article titles had been
 found and no page views downloaded. The code (`wq/attention.py`, tested) and `research/attention_trial.py`
 are ready if it can be run from another network.
+
+## Addendum, 22 Oct 2026: J, leaning on the top picks without cutting to 10 names (`research/weights_trial.py`)
+
+Added after G–I, before writing the code. In G, returns rose as holdings shrank (20 names 26.0%, 15
+names 30.5%, 10 names 33.3%), which suggests the model's top picks carry most of the value. But 10
+names raised the drop risk. These two variants keep 15 names and lean on the top in other ways. Both
+keep the 10-seed `tx_blend` scores and all other rules.
+
+- **J1, score-tilted weights:** the 15 holdings, sorted by score, get target weights falling linearly from
+  1.5× to 0.5× the equal weight (the same total). Option `portfolio.weighting: score_tilt`.
+- **J2, let winners run:** a kept holding above its target is not trimmed, however far it has drifted.
+  Underweight holdings are still topped up as today. Option `portfolio.trim_overweight: false`.
+- **Primary:** the paired weekly net-return difference against `tx_blend`, Newey–West t (4 lags).
+- **Pass** if all of these hold:
+  - t ≥ 2.4;
+  - the difference is positive in each of 2016–18, 2019–21 and 2022–26;
+  - a backtest worst drop no worse than −30%;
+  - a bootstrap chance of a drop beyond 30% within 5 years of no more than 20%.
+
+This is the last variant test on the current data. The trial count in `research/trials.csv` is the
+context for any pass.
