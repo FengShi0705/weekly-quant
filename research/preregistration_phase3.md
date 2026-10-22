@@ -201,3 +201,23 @@ transformer's equivalent has not been tested.
   - your limit holds: a backtest worst drop no worse than −30%, and a bootstrap chance of a drop beyond
     30% within 5 years no higher than 20% (`tx_blend`: 15%).
 - **After a pass:** it joins paper trading.
+
+## Addendum, 22 Oct 2026: H, analyst rating changes (`research/analyst_trial.py`)
+
+Added after G, before fetching the data. Yahoo's analyst history, refused earlier, now loads. It covers US
+stocks only (136 of 247), from 2012: each rating action's timestamp, firm, old and new grade, and the
+old and new price target. Rating and target revisions are a documented short-horizon signal, which fits
+weekly scoring. They are also new information, not derived from prices.
+
+- **Inputs** (`wq/analyst.py`), using only actions dated at least one day before the signal date:
+  - `rev_net_4w`: upgrades minus downgrades over the last 4 weeks;
+  - `rev_net_13w`: the same over 13 weeks;
+  - `pt_rev_4w`: the mean log change in price target over the last 4 weeks, from actions with both
+    targets.
+  Non-US stocks are missing, with the usual flags. Every input is ranked across stocks each week.
+- **Model:** the Stage 1 transformer with these three inputs, nothing else changed. Seeds 0–2, against
+  Stage 1 run 1.
+- **Primary:** the paired weekly IC of the smoothed scores across all stocks, Newey–West t (4 lags).
+- **Information:** the same IC on US stocks only.
+- **Pass** if t ≥ 2.0 and the traded blend (sector cap 5) has a worst drop no worse than −30%.
+- **After a pass:** a 10-seed re-run must keep the sign (t > 1). It then joins paper trading.
