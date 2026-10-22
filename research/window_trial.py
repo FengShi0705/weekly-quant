@@ -48,7 +48,8 @@ def main():
     out = ROOT / "research" / "results" / "phase3" / f"window_{WINDOW}"
     out.mkdir(parents=True, exist_ok=True)
 
-    scfg = dataclasses.replace(deep.Stage1Config(), train_window_weeks=WINDOW)
+    (out / "cache").mkdir(exist_ok=True)
+    scfg = dataclasses.replace(deep.Stage1Config(), train_window_weeks=WINDOW, cache_dir=str(out / "cache"))
     weeks, vocab = deep.build_weeks(panel, universe)
     tx, log = deep.walk_forward_tx(weeks, vocab, dates, scfg)
     tx.to_parquet(out / "tx_scores.parquet")

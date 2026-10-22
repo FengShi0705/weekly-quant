@@ -15,6 +15,7 @@ Several seeds are trained independently and their scores averaged. Needs PyTorch
 """
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass, field
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -47,6 +48,7 @@ class Stage1Config:
     refit_anchor: str = "2016-01-08"  # first walk-forward week; refits fall every refit_every_weeks from it
     save_dir: str = ""              # if set, each refit's model is saved there (for Stage 2)
     label_horizon: int = 1          # weeks the panel's label spans (features.build_panel's label_horizon_weeks)
+    cache_dir: str = ""             # if set, each (refit, seed)'s scores are kept there and reused on a re-run
     features: list = field(default_factory=lambda: list(FEATURES))
 
 
@@ -253,6 +255,10 @@ def refit_plan(weeks, pred_dates, cfg, horizon=None):
 def _job(args):
     """One (refit, seed): pick epochs on the inner validation block, retrain on the full window, score."""
     plan_i, seed, n_feat, vocab, cfg, *given = args
+    cached = f"{cfg.cache_dir}/refit{plan_i:03d}_seed{seed}.parquet" if cfg.cache_dir else ""
+    if cached and Path(cached).exists():                     # resume an interrupted walk-forward
+        df = pd.read_parquet(cached)
+        return plan_i, seed, int(df["epochs"].iloc[0]), df.drop(columns="epochs")
     torch = _torch()
     torch.set_num_threads(1)
     window, fit_w, val_w, chunk = given[0] if given else _PLAN[plan_i]
@@ -261,9 +267,11 @@ def _job(args):
     if cfg.save_dir:
         torch.save(model.state_dict(), f"{cfg.save_dir}/refit{plan_i:03d}_seed{seed}.pt")
     scores = _score(model, chunk)
-    rows = [pd.DataFrame({"date": w.date, "ticker": w.tickers, "tx": s, "seed": seed})
-            for w, s in zip(chunk, scores)]
-    return plan_i, seed, best_ep, pd.concat(rows)
+    rows = pd.concat([pd.DataFrame({"date": w.date, "ticker": w.tickers, "tx": s, "seed": seed})
+                      for w, s in zip(chunk, scores)])
+    if cached:
+        rows.assign(epochs=best_ep).to_parquet(cached)
+    return plan_i, seed, best_ep, rows
 
 
 _PLAN = {}
@@ -310,7 +318,6 @@ def live_scores(panel, universe, dates, model_dir, cfg=None, retrain=True, verbo
     when retrain is True (about 10 minutes for 10 seeds on 4 CPUs).
     """
     import multiprocessing as mp
-    from pathlib import Path
     torch = _torch()
     cfg = cfg or Stage1Config(seeds=tuple(range(10)))
     weeks, vocab = build_weeks(panel, universe, cfg.features)

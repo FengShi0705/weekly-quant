@@ -73,7 +73,7 @@ worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000
 | C. Index ETFs and leveraged index trend (no stock picking) | CAGR > 30.5%, drop ≥ −30%, drop risk ≤ 15% | **Fail**: no arm passes |
 | D4. Transformer trained on 4-week returns | paired 4-week IC t ≥ 2.3 vs run 1 | **Fail**: 4-week IC 0.054 vs 0.064, t −1.5 |
 | D13. Transformer trained on 13-week returns | paired 13-week IC t ≥ 2.3 vs run 1 | **Fail**: 13-week IC 0.068 vs 0.102, t −2.4 |
-| E. Transformer with up to 10 years of training history | paired IC t ≥ 2 vs run 1 | _running_ |
+| E. Transformer with up to 10 years of training history | paired IC t ≥ 2 vs run 1 | **Fail**: IC 0.029 vs 0.033, t −1.4, worse in 2016–19 and 2020–26 |
 | F. `tx_blend` hold band 90 / 120, score average 2 / 8 weeks | paired weekly return t ≥ 2.5, ahead in all 3 sub-periods | **Fail**: best is 2-week average, +2.7 pts/yr, t 1.6, behind in 2016–18 |
 
 Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
@@ -105,16 +105,18 @@ What was learned:
    4- or 13-week returns, the transformer ranked those longer returns *worse* than the model trained on
    next week's returns (13-week IC 0.068 vs 0.102). Overlapping long labels give fewer independent
    training signals, and the 4-week score average already turns weekly scores into a slower signal.
-3. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
+3. **Five years of training history is enough; more hurts.** With up to 10 years the transformer ranked
+   worse in both halves of the period. Markets change, and older weeks dilute the recent ones.
+4. **The LightGBM-era portfolio settings still suit the transformer.** A narrower hold band trades more
    (1.2–1.9% a year in costs vs 0.6%) for no reliable gain; neither a shorter nor a longer score average
    beat 4 weeks in every sub-period.
-4. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
+5. **Trading more often does not help.** Daily trading made the same trades a few days earlier or later,
    with the same costs (0.62% vs 0.63% a year), and 0.9 points a year less. Zero commission doesn't
    matter much here: the costs that bind are the FX fee and stamp duty, which a hold band already keeps low.
-5. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
+6. **Backtest CAGR is dominated by the path.** The same scores and rules, traded every 4 weeks, made
    anything from 24.9% to 31.9% a year depending only on which week the schedule started. A single
    backtest figure is worth about ±3–4 points; only paired tests separate variants.
-6. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
+7. **No ETF strategy competes on return without breaking the 30% drop limit.** Trend filters on
    unlevered funds cut drawdowns sharply but returned 7–10% a year in 2016–2026 (fast V-shaped recoveries
    whipsawed them). Leveraged index funds earn more only by taking drops of 45–60%. The survivorship
    bias in `tx_blend`'s backtest (its universe is today's large caps) is real, but it would have to be
@@ -125,8 +127,10 @@ Decisions:
 - Nothing changes in paper trading. `tx_blend` stays the candidate next to `main`.
 - **Exhausted with the data we have:**
   - the network and its inputs;
+  - its training target and history length;
   - learned trading rules;
   - trading frequency;
+  - the portfolio settings;
   - free earnings data;
   - index and leveraged ETF strategies.
 - **What is left needs new data, and is your decision:**
@@ -134,3 +138,6 @@ Decisions:
     month), which adds breadth and value, quality and revision signals;
   - news and filings scored as features (PLAN.md §11, Phase 4), for example historical news tone from
     GDELT on Google BigQuery, which would fit the £100 research budget.
+  - point-in-time US fundamentals from SEC XBRL filings (free, but the SEC requires a contact email in
+    every request, so it needs your consent to use yours).
+- **Blocked:** Yahoo's analyst rating history, which refused requests throughout (rate-limited).

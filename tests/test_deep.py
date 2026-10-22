@@ -99,6 +99,18 @@ def test_refit_plan_purges_multi_week_labels(cfg, signal_market, h):
         assert max(w.week for w in fit_w) + h < min(w.week for w in val_w)
 
 
+def test_cached_walk_forward_resumes_with_identical_scores(cfg, signal_market, tmp_path):
+    """With cache_dir, an interrupted walk-forward reuses finished (refit, seed) scores exactly."""
+    scfg = small_cfg(cache_dir=str(tmp_path))
+    first, log1, _, _ = run(cfg, signal_market, scfg)
+    files = sorted(tmp_path.glob("*.parquet"))
+    assert len(files) == len(log1)
+    files[-1].unlink()                                        # as if the last job was interrupted
+    again, log2, _, _ = run(cfg, signal_market, scfg)
+    pd.testing.assert_frame_equal(first, again)
+    assert log1["epochs"].tolist() == log2["epochs"].tolist()
+
+
 def test_padding_and_account_slots_do_not_change_scores(cfg, signal_market):
     close, volume, fx, universe = signal_market
     panel, _, _ = prepare(cfg, close, volume, fx, universe)

@@ -475,8 +475,8 @@ Live scores reproduce the backtest's to 1e-7. Rules for it, set now:
 
 ## 16. Phase 3 research: other models and strategies (21 Oct 2026)
 
-Four pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
-for something better than `tx_blend` for a £10,000 Trading 212 ISA. All four failed:
+Eight pre-registered tests (`research/preregistration_phase3.md`, results in `research/RESULTS.md`) looked
+for something better than `tx_blend` for a £10,000 Trading 212 ISA. All eight failed:
 
 | Test | Result |
 |---|---|
@@ -484,11 +484,16 @@ for something better than `tx_blend` for a £10,000 Trading 212 ISA. All four fa
 | Trading every day instead of weekly | 29.4% vs 30.5% a year, t −0.5 |
 | Trading every 4 weeks (all four starting weeks) | 24.9–31.9% vs 30.5%, average t −1.0 |
 | Index ETFs and leveraged index trend (S&P 500 1x/2x/3x, dual momentum, multi-asset trend) | none combines the return with a drop under 30%; leveraged trend dropped 45–62% |
+| Transformer trained on 4- or 13-week returns (closer to the holding period) | ranks those returns worse than the 1-week model (t −1.5, −2.4) |
+| Transformer with up to 10 years of training history | IC 0.029 vs 0.033, t −1.4 |
+| Hold band 90/120 or score average 2/8 weeks for `tx_blend` | best +2.7 pts/yr, t 1.6, not in every sub-period |
 
 **Takeaways:**
 - **Zero commission doesn't make frequent trading pay.** The FX fee and stamp duty are the costs that
   bind, and the hold band already keeps them at about 0.6% a year.
 - **The trading calendar alone moves a backtest by up to 7 points a year.** Only paired tests can
   separate variants.
-- **Further gains need new data:** a larger, survivorship-free universe with fundamentals, or news and
-  filings features.
+- **Further gains need new data:**
+  - a larger, survivorship-free universe with fundamentals (paid);
+  - news and filings features;
+  - SEC XBRL fundamentals for the US stocks (free, but needs a contact email in each request).
