@@ -270,3 +270,23 @@ keep the 10-seed `tx_blend` scores and all other rules.
 
 This is the last variant test on the current data. The trial count in `research/trials.csv` is the
 context for any pass.
+
+## Addendum, 22 Oct 2026: K, replication of score-tilted weights on LightGBM (`research/tilt_replication.py`)
+
+Added after J, before running K. This is a replication of J1, not a new variant. J1 met every condition
+but significance (t 2.23 against 2.4). If tilting toward the top picks works because those picks carry
+more of the edge, it should also help a different model's ranking. If J1 was luck in the transformer's
+score path, it should not.
+
+- **Test:** `main` exactly as it trades today (LightGBM 70% + momentum 30%, 15 names, no sector cap, its
+  saved backtest scores), with `portfolio.weighting: score_tilt` against equal weights.
+- **Primary:** the paired weekly net-return difference, Newey–West t (4 lags).
+- **Replicates** if all of these hold:
+  - t ≥ 2.0;
+  - the difference is positive in each of 2016–18, 2019–21 and 2022–26;
+  - the worst drop is no worse than −30%;
+  - the chance of a >30% drop within 5 years is no more than 20%.
+- **If it replicates:** J1 (`tx_blend` with score-tilted weights) is accepted as a candidate. It joins the
+  simulated paper ledger as `tx_blend_tilt`, next to `tx_blend`, under PLAN.md §15's rules. It does not
+  go into the Practice account or the ISA, and `main` is unchanged until its own review.
+- **If it does not:** J1 stays unconfirmed and this phase ends.
