@@ -221,3 +221,26 @@ weekly scoring. They are also new information, not derived from prices.
 - **Information:** the same IC on US stocks only.
 - **Pass** if t ≥ 2.0 and the traded blend (sector cap 5) has a worst drop no worse than −30%.
 - **After a pass:** a 10-seed re-run must keep the sign (t > 1). It then joins paper trading.
+
+## Addendum, 22 Oct 2026: I, Wikipedia attention (`research/attention_trial.py`)
+
+Added after H, before fetching the data. This is the last free source of new information reachable
+without an account or personal contact details. Daily English Wikipedia page views per company
+(Wikimedia API, human views only) exist from 1 Jul 2015. Unusual attention is a documented predictor of
+short-term price pressure and reversal, mostly in smaller stocks. The prior for large caps is low.
+
+- **Mapping:** each stock's article is found with Wikipedia search on its name and checked by hand,
+  before any page views are downloaded.
+- **Known limit:** renamed articles (e.g. Facebook → Meta Platforms) lose their views under the old title.
+- **Inputs** (`wq/attention.py`), using views up to the day before the signal date:
+  - `attn_1w`: log of the last 5 days' mean daily views over the mean of the 52 weeks before;
+  - `attn_4w`: the same with the last 20 days;
+  - `attn_level`: log of the mean daily views over the last 52 weeks.
+  Each is missing until a stock has 52 weeks of views (so from about mid-2016), and ranked across stocks
+  each week.
+- **Model:** the Stage 1 transformer with these three inputs, nothing else changed. Seeds 0–2, against
+  Stage 1 run 1.
+- **Primary:** the paired weekly IC of the smoothed scores, all weeks, Newey–West t (4 lags).
+- **Information:** the same from 2017.
+- **Pass** if t ≥ 2.0 and the traded blend (sector cap 5) has a worst drop no worse than −30%.
+- **After a pass:** a 10-seed re-run must keep the sign (t > 1).
