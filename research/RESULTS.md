@@ -76,6 +76,7 @@ worst drop −26.3%, 15.1% chance of a >30% drop within 5 years), for a £10,000
 | E. Transformer with up to 10 years of training history | paired IC t ≥ 2 vs run 1 | **Fail**: IC 0.029 vs 0.033, t −1.4, worse in 2016–19 and 2020–26 |
 | F. `tx_blend` hold band 90 / 120, score average 2 / 8 weeks | paired weekly return t ≥ 2.5, ahead in all 3 sub-periods | **Fail**: best is 2-week average, +2.7 pts/yr, t 1.6, behind in 2016–18 |
 | G. Holdings: 10 or 20 names (blend), 10 names (transformer only) | paired weekly return t ≥ 2.4, all 3 sub-periods, drop ≥ −30%, drop risk ≤ 20% | **Fail**: 10 names 33.3%, +2.6 pts/yr, t 1.4, ahead in all sub-periods, drop risk 20.2%; 20 names 26.0%, t −2.2 |
+| H. Analyst rating and price-target changes (Yahoo, US stocks only) as transformer inputs | paired IC t ≥ 2 vs run 1 | **Fail**: IC 0.030 vs 0.033, t −1.3; US stocks alone 0.035 vs 0.037, t −0.9 |
 
 Test C, Jan 2016 – Oct 2026, GBP, after Trading 212 costs (real funds on Trading 212):
 
@@ -97,11 +98,14 @@ products closely over 2016–2026 (3LUS 33.8% vs 33.8% a year; XS2D 25.1% vs 26.
 
 What was learned:
 
-1. **Earnings announcements add nothing the prices don't already carry.** The reaction to the latest
+1. **Earnings announcements and analyst revisions add nothing the prices don't already carry.** The reaction to the latest
    announcement, the EPS surprise and its age were available for 77% of stock-weeks (98% in the US, 26%
    in the UK). The transformer did slightly worse with them. LightGBM did slightly better (information
    only: IC 0.021 vs 0.019, t 1.3), still far below the transformer's 0.032. Post-earnings drift in
    large caps is small, and what there is is probably already carried by the 1–3 month return inputs.
+   Analyst upgrades, downgrades and price-target changes (US stocks, 2012 onwards) did no better, on the
+   US stocks or overall. In large caps both are fast, widely followed news, already in the price by
+   the time a weekly model trades.
 2. **One-week labels are the right target, even for a portfolio that holds for months.** Trained on
    4- or 13-week returns, the transformer ranked those longer returns *worse* than the model trained on
    next week's returns (13-week IC 0.068 vs 0.102). Overlapping long labels give fewer independent
@@ -136,7 +140,7 @@ Decisions:
   - learned trading rules;
   - trading frequency;
   - the portfolio settings and the number of holdings;
-  - free earnings data;
+  - free earnings and analyst data;
   - index and leveraged ETF strategies.
 - **What is left needs new data, and is your decision:**
   - a larger, survivorship-free universe with point-in-time fundamentals (paid data, roughly $20–80 a
@@ -145,4 +149,3 @@ Decisions:
     GDELT on Google BigQuery, which would fit the £100 research budget.
   - point-in-time US fundamentals from SEC XBRL filings (free, but the SEC requires a contact email in
     every request, so it needs your consent to use yours).
-- **Blocked:** Yahoo's analyst rating history, which refused requests throughout (rate-limited).
