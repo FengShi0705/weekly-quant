@@ -178,3 +178,20 @@ trades each as `tx_blend_tilt` does; the baseline is the same strategy on run 1'
 | `calendar` | earnings expected next week, dividend expected within 4 weeks, 12-month dividend yield, same-month seasonality | 0.0334 | 0.22 | 26.4%, −27.4% | Fail |
 | `fx` | quote currency's 1-, 3- and 12-month return against GBP | 0.0267 | −2.72 | 29.5%, −27.8% | Fail (significantly worse) |
 | `all` | all 21 together | 0.0315 | −0.44 | 28.1%, −26.2% | Fail |
+
+Why nothing helped (information only, `research/feature_diagnostics.py` → `research/results/features/diagnostics.csv`):
+each new feature's own weekly IC against next week's return, and its IC against the part of the return the
+current transformer score does not explain.
+
+- **No signal:** most features have none on their own (|t| < 2): the FX, seasonality, volume, illiquidity
+  and most peer inputs.
+- **Some signal, largely already in the model:** a few do predict on their own, but the score already
+  carries most of it. Sector momentum and dividend yield are correlated 0.34 and −0.40 with the score,
+  and their IC beyond the model falls to |t| < 1.
+- **Some signal beyond the score:** information discreteness (IC −0.015, t −2.8: momentum built from
+  many small moves lasts longer, as published), downside beta (t 2.1) and within-sector 1-week reversal
+  (t −1.9).
+- **Why these don't count yet:** they were picked out of 21 after seeing the results. By chance alone
+  about one in 21 would show |t| ≈ 2. And the transformer did not gain from them when given them in
+  training. Using them now would be selection on this data. They are candidates for a pre-registered
+  test on new data (live weeks), not a change today.
