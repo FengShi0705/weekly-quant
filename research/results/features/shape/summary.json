@@ -1,0 +1,44 @@
+{
+  "run_at": "2026-10-22T22:54:46+00:00",
+  "set": "shape",
+  "features": [
+    "info_disc",
+    "down_beta",
+    "max_dd_1y",
+    "dist_low",
+    "amihud",
+    "abn_volume"
+  ],
+  "coverage": {
+    "info_disc": 1.0,
+    "down_beta": 1.0,
+    "max_dd_1y": 1.0,
+    "dist_low": 1.0,
+    "amihud": 1.0,
+    "abn_volume": 0.9970667656542277
+  },
+  "gate": {
+    "ic_variant": 0.03310773610953626,
+    "ic_reference": 0.03287450254393007,
+    "diff": 0.00023323356560619047,
+    "nw_t": 0.10313212850944622,
+    "weeks": 561,
+    "diff_by_period": {
+      "2016-18": -0.0032432067622349533,
+      "2019-21": -0.0005079544632469956,
+      "2022-26": 0.002889246515901225
+    },
+    "pass": false
+  },
+  "backtest": {
+    "cagr": 0.2721768033382177,
+    "sharpe": 1.2346083003559993,
+    "max_drawdown": -0.2607419499907945,
+    "turnover": 0.05577793242896171,
+    "p_drop_over_30pct_5y": 0.1428,
+    "reference_cagr": 0.31699437369632655,
+    "reference_max_drawdown": -0.2712660857794129,
+    "weekly_return_diff_per_year": -0.03600477542702795,
+    "weekly_return_diff_nw_t": -1.6414296966226638
+  }
+}

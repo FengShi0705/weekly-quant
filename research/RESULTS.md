@@ -164,3 +164,17 @@ Decisions:
     GDELT on Google BigQuery, which would fit the £100 research budget.
   - point-in-time US fundamentals from SEC XBRL filings (free, but the SEC requires a contact email in
     every request, so it needs your consent to use yours).
+
+## New feature sets for the transformer (22–23 Oct 2026)
+
+Pre-registered in `research/preregistration_features.md`. Each set was added to the Stage 1 transformer
+(seeds 0–2) and compared with Stage 1 run 1 on the same weeks. Bar: paired IC t ≥ 2.4. The backtest
+trades each as `tx_blend_tilt` does; the baseline is the same strategy on run 1's scores (31.7% a year).
+
+| Set | Inputs | IC (run 1: 0.0329) | Paired t | Traded as `tx_blend_tilt`: CAGR, worst drop | Result |
+|---|---|---|---|---|---|
+| `peer` | stock vs sector returns (1w, 1m, 3m, 12-1m); sector and country momentum and 1-month return | 0.0330 | 0.06 | 30.1%, −24.9% | Fail |
+| `shape` | information discreteness, downside beta, worst 1-year drop, distance from 1-year low, Amihud illiquidity, abnormal volume | 0.0331 | 0.10 | 27.2%, −26.1% | Fail |
+| `calendar` | earnings expected next week, dividend expected within 4 weeks, 12-month dividend yield, same-month seasonality | 0.0334 | 0.22 | 26.4%, −27.4% | Fail |
+| `fx` | quote currency's 1-, 3- and 12-month return against GBP | 0.0267 | −2.72 | 29.5%, −27.8% | Fail (significantly worse) |
+| `all` | all 21 together | 0.0315 | −0.44 | 28.1%, −26.2% | Fail |

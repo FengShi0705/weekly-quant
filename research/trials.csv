@@ -35,3 +35,8 @@ run_at,stage,tag,config,seeds,weeks,ic_tx,ic_lgbm,gate_t,gate_pass,note
 2026-10-22T04:55:11+00:00,phase3,J_J1_score_tilt,J1_score_tilt,10,,,,2.232503957498032,False,"CAGR 0.328 vs 0.305, MDD -0.263, P(>30% in 5y) 0.181"
 2026-10-22T04:55:11+00:00,phase3,J_J2_no_trim,J2_no_trim,10,,,,2.158072911509621,False,"CAGR 0.401 vs 0.305, MDD -0.370, P(>30% in 5y) 0.520"
 2026-10-22T04:59:58+00:00,phase3,K_tilt_replication_main,score_tilt,5,561,,,2.3527750352687367,True,main CAGR 0.284 tilted vs 0.261 equal
+2026-10-22T22:11:53+00:00,features,features_peer,peer,3,561,0.033024459012864216,0.03287450254393007,0.06055137746586011,False,pre-registered feature set peer
+2026-10-22T22:54:46+00:00,features,features_shape,shape,3,561,0.03310773610953626,0.03287450254393007,0.10313212850944622,False,pre-registered feature set shape
+2026-10-22T23:39:25+00:00,features,features_calendar,calendar,3,561,0.03339442404697685,0.03287450254393007,0.22192121268404108,False,pre-registered feature set calendar
+2026-10-23T00:25:35+00:00,features,features_fx,fx,3,561,0.0266517070567888,0.03287450254393007,-2.715064188324099,False,pre-registered feature set fx
+2026-10-23T01:12:13+00:00,features,features_all,all,3,561,0.03145043398042088,0.03287450254393007,-0.4413037522809697,False,pre-registered feature set all

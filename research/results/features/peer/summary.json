@@ -1,0 +1,48 @@
+{
+  "run_at": "2026-10-22T22:11:53+00:00",
+  "set": "peer",
+  "features": [
+    "sec_rel_1w",
+    "sec_rel_1m",
+    "sec_rel_3m",
+    "sec_rel_12_1",
+    "sec_mom_12_1",
+    "sec_ret_1m",
+    "cty_mom_12_1",
+    "cty_ret_1m"
+  ],
+  "coverage": {
+    "sec_rel_1w": 1.0,
+    "sec_rel_1m": 1.0,
+    "sec_rel_3m": 1.0,
+    "sec_rel_12_1": 1.0,
+    "sec_mom_12_1": 1.0,
+    "sec_ret_1m": 1.0,
+    "cty_mom_12_1": 1.0,
+    "cty_ret_1m": 1.0
+  },
+  "gate": {
+    "ic_variant": 0.033024459012864216,
+    "ic_reference": 0.03287450254393007,
+    "diff": 0.00014995646893414623,
+    "nw_t": 0.06055137746586011,
+    "weeks": 561,
+    "diff_by_period": {
+      "2016-18": -0.004294118861263134,
+      "2019-21": 0.0015885314666854481,
+      "2022-26": 0.0020347124240302013
+    },
+    "pass": false
+  },
+  "backtest": {
+    "cagr": 0.3011925247442093,
+    "sharpe": 1.3464795513381524,
+    "max_drawdown": -0.24853602340358938,
+    "turnover": 0.07144940088053492,
+    "p_drop_over_30pct_5y": 0.1266,
+    "reference_cagr": 0.31699437369632655,
+    "reference_max_drawdown": -0.2712660857794129,
+    "weekly_return_diff_per_year": -0.01353627904234557,
+    "weekly_return_diff_nw_t": -0.6403365524082082
+  }
+}
