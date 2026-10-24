@@ -1,0 +1,16 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+BUY,AAL.L,Anglo American,UK,11.5862,3625.0,GBp,420.0,2.52,enter
+BUY,AMAT,Applied Materials,US,2.3163,377.24,USD,653.31,1.63,enter
+BUY,AMD,Advanced Micro Devices,US,1.9324,516.79,USD,746.66,1.87,enter
+BUY,ANTO.L,Antofagasta,UK,12.3415,3025.0,GBp,373.33,2.24,enter
+BUY,BAYN.DE,Bayer,DE,12.586,44.21,EUR,466.66,1.17,enter
+BUY,BBVA.MC,BBVA,ES,37.6135,22.19,EUR,700.0,3.15,enter
+BUY,CAT,Caterpillar,US,0.6359,687.0,USD,326.63,0.82,enter
+BUY,IFX.DE,Infineon,DE,13.385,49.885,EUR,560.0,1.4,enter
+BUY,ISP.MI,Intesa Sanpaolo,IT,171.5315,5.839,EUR,840.0,3.78,enter
+BUY,LRCX,Lam Research,US,3.5263,230.1,USD,606.66,1.52,enter
+BUY,MU,Micron Technology,US,1.3513,877.55,USD,886.61,2.22,enter
+BUY,RR.L,Rolls-Royce,UK,40.7536,1259.6,GBp,513.33,3.08,enter
+BUY,SAN.MC,Banco Santander,ES,96.9051,11.484,EUR,933.33,4.2,enter
+BUY,STAN.L,Standard Chartered,UK,40.0471,1981.0,GBp,793.33,4.76,enter
+BUY,UCG.MI,UniCredit,IT,16.3084,71.65,EUR,980.0,4.41,enter

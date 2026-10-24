@@ -1,2 +1,3 @@
-date,equity,cash,positions,VUSA.L_price,VWRL.L_price
-2026-10-16,10000.0,10000.0,0,110.455,139.58
+date,equity,cash,positions,VUSA.L_price,VWRL.L_price,dividend_tax
+2026-10-16,10000.0,10000.0,0,110.455,139.58,
+2026-10-23,9641.82,243.29,15,108.6425,137.06,0.0
