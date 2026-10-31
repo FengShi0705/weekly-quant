@@ -30,7 +30,7 @@ import yaml
 
 from . import paper, weekly
 from .costs import trade_cost
-from .data import to_base
+from .data import load_dividends, to_base
 
 DEMO = "https://demo.trading212.com/api/v0"
 YAHOO_SUFFIX = re.compile(r"\.(L|DE|PA|AS|MC|MI|SW|CO|ST|HE|TO|T|HK)$")
@@ -421,7 +421,8 @@ def compare(spec_path, cfg, close_local, fx_usd, universe, tol=0.05):
     d = _state_dir(spec_path)
     base = cfg["account"]["base_currency"]
     px = to_base(close_local, universe["currency"], fx_usd, base).ffill()
-    trades = _fill_costs(d, cfg, close_local, px, universe) if (d / "fills.csv").exists() else pd.DataFrame()
+    trades = (_fill_costs(d, cfg, close_local, px, universe, load_dividends(cfg)) if (d / "fills.csv").exists()
+              else pd.DataFrame())
     trades.to_csv(d / "comparison.csv", index=False)
 
     lines = [f"# Trading 212 Practice vs simulation ({strategy})", ""]
@@ -466,7 +467,17 @@ def compare(spec_path, cfg, close_local, fx_usd, universe, tol=0.05):
     return trades
 
 
-def _fill_costs(d, cfg, close_local, px, universe):
+def _dividends_since(div_yield, t, day):
+    """Product of (1 - dividend yield) over the dividends paid after `day`. The stored closes are
+    dividend-adjusted (data.total_return), so each later dividend has lowered the close of `day`;
+    dividing by this gives the close as it actually traded."""
+    if div_yield is None or t not in div_yield.columns:
+        return 1.0
+    y = div_yield[t]
+    return float((1 - y[y.index > day].fillna(0.0)).prod())
+
+
+def _fill_costs(d, cfg, close_local, px, universe, div_yield=None):
     """Each real fill's cost (price vs that day's close, plus fees) next to the cost model's estimate."""
     base = cfg["account"]["base_currency"]
     fills = pd.read_csv(d / "fills.csv")
@@ -493,9 +504,10 @@ def _fill_costs(d, cfg, close_local, px, universe):
                            ticker=t)
         # Compare in the quote currency, so FX moves during the day don't count as cost. If the fill
         # price isn't in the quote currency's units, compare in base currency instead.
-        ratio = float(f["price"]) / local.at[day, t]
+        adj = _dividends_since(div_yield, t, day)
+        ratio = float(f["price"]) / (local.at[day, t] / adj)
         if abs(math.log(ratio)) > 0.2:
-            ratio = value / qty / close.iloc[-1]
+            ratio = value / qty / (close.iloc[-1] / adj)
         timing = sign * (ratio - 1) * 1e4
         fees = abs(float(f.get("fees", 0) or 0))
         rows.append({"signal_date": f["signal_date"], "fill_day": day.date(), "ticker": t, "side": side,

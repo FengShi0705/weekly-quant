@@ -319,3 +319,26 @@ def test_resend_works_on_a_fresh_machine_without_prices(cfg, spec, monkeypatch, 
         cli.cmd_t212(cfg, argparse.Namespace(spec="paper/strategies.yaml", execute=False, retry_rejected=False),
                      client=client(FakeT212(cash=500)))
     assert downloads == [1]
+
+
+def test_fill_cost_uses_the_close_as_traded_after_a_dividend(cfg, tmp_path):
+    """Stored closes are dividend-adjusted: a dividend paid after the fill lowers the stored close of the
+    fill day. The comparison must undo that, or every later dividend would look like extra cost."""
+    days = pd.bdate_range("2026-10-12", "2026-10-30")
+    raw = pd.Series(100.0, index=days)
+    y = pd.Series(0.0, index=days)
+    y[pd.Timestamp("2026-10-28")] = 0.01                                  # 1% dividend after the fill
+    adjusted = raw.copy()
+    adjusted[adjusted.index < pd.Timestamp("2026-10-28")] *= 0.99
+    close = pd.DataFrame({"S000": adjusted})
+    universe = pd.DataFrame({"country": ["US"], "currency": ["USD"], "sector": ["Tech"], "lot_size": [1]}, index=["S000"])
+    pd.DataFrame([{"order_id": 1, "ticker": "S000_EQ", "side": "BUY", "filled_at": "2026-10-19T14:30:00Z",
+                   "quantity": 2, "price": 100.1, "instrument_ccy": "USD", "fx_rate": 1.0, "net_value": 200.2,
+                   "account_ccy": "USD", "fees": 0.0, "fees_detail": ""}]).to_csv(tmp_path / "fills.csv", index=False)
+    pd.DataFrame([{"signal_date": "2026-10-16", "ticker": "S000", "order_id": 1, "status": "sent"}]
+                 ).to_csv(tmp_path / "orders_placed.csv", index=False)
+    cfg["account"]["base_currency"] = "USD"
+    out = t212._fill_costs(tmp_path, cfg, close, close, universe, pd.DataFrame({"S000": y}))
+    assert out.loc[0, "vs_close_bps"] == pytest.approx(10, abs=0.1)        # 100.1 vs the traded 100, not 99
+    stale = t212._fill_costs(tmp_path, cfg, close, close, universe, None)
+    assert stale.loc[0, "vs_close_bps"] == pytest.approx(111.1, abs=0.2)   # what the old report showed
