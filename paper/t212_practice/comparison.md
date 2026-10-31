@@ -30,13 +30,14 @@ At each weekend run, both valued at Friday's close.
 |:-----------|--------------:|------------:|-------------:|
 | 2026-10-18 |       9999.99 |    10000    |        -0.01 |
 | 2026-10-24 |       9426.27 |     9641.82 |      -215.55 |
+| 2026-10-31 |       9656.08 |     9789.51 |      -133.43 |
 
 ## Holdings that differ
 
-Valued at the 2026-10-23 close. Lists stocks held in only one account, and stocks in both whose share counts are more than 5% apart (smaller gaps from fill prices and rounding are left out).
+Valued at the 2026-10-30 close. Lists stocks held in only one account, and stocks in both whose share counts are more than 5% apart (smaller gaps from fill prices and rounding are left out).
 
 Both accounts hold the same stocks.
 
 | ticker   | name   | held in   | Trading 212 shares   | simulated shares   |   Trading 212 value |   simulated value |   difference |
 |:---------|:-------|:----------|:---------------------|:-------------------|--------------------:|------------------:|-------------:|
-| CASH     |        |           |                      |                    |               112.1 |            243.29 |      -131.19 |
+| CASH     |        |           |                      |                    |               112.1 |            242.76 |      -130.66 |
