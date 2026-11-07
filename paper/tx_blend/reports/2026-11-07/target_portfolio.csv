@@ -1,0 +1,16 @@
+rank,ticker,name,country,sector,score,target_weight,target_value_GBP,held
+1,MU,Micron Technology,US,Tech,0.472,0.0653,619.37,True
+2,AMD,Advanced Micro Devices,US,Tech,0.463,0.0653,619.37,True
+3,AMAT,Applied Materials,US,Tech,0.453,0.0653,619.37,True
+4,SAN.MC,Banco Santander,ES,Financials,0.449,0.0653,619.37,True
+5,BBVA.MC,BBVA,ES,Financials,0.448,0.0653,619.37,True
+6,LRCX,Lam Research,US,Tech,0.445,0.0653,619.37,True
+7,STAN.L,Standard Chartered,UK,Financials,0.441,0.0653,619.37,True
+8,UCG.MI,UniCredit,IT,Financials,0.439,0.0653,619.37,True
+11,ISP.MI,Intesa Sanpaolo,IT,Financials,0.408,0.0653,619.37,True
+13,RR.L,Rolls-Royce,UK,Industrials,0.403,0.0653,619.37,True
+19,IFX.DE,Infineon,DE,Tech,0.36,0.0653,619.37,True
+22,AAL.L,Anglo American,UK,Materials,0.355,0.0653,619.37,True
+24,ANTO.L,Antofagasta,UK,Materials,0.334,0.0653,619.37,True
+27,CAT,Caterpillar,US,Industrials,0.323,0.0653,619.37,True
+36,BAYN.DE,Bayer,DE,Health,0.298,0.0653,619.37,True

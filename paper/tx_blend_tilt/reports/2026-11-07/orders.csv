@@ -1,0 +1,4 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+SELL,BAYN.DE,Bayer,DE,5.9243,55.58,EUR,274.76,0.69,resize
+SELL,UCG.MI,UniCredit,IT,6.6663,76.8,EUR,427.21,1.07,resize
+BUY,AMAT,Applied Materials,US,1.0751,332.72,USD,265.83,0.66,resize

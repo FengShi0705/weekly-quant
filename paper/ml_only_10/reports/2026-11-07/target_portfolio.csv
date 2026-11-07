@@ -1,0 +1,11 @@
+rank,ticker,name,country,sector,score,target_weight,target_value_GBP,held
+1,IFX.DE,Infineon,DE,Tech,0.495,0.098,878.92,True
+2,AMAT,Applied Materials,US,Tech,0.493,0.098,878.92,True
+7,LRCX,Lam Research,US,Tech,0.458,0.098,878.92,True
+8,ODFL,Old Dominion Freight,US,Industrials,0.457,0.098,878.92,True
+9,BAYN.DE,Bayer,DE,Health,0.453,0.098,878.92,True
+15,GLE.PA,Societe Generale,FR,Financials,0.417,0.098,878.92,True
+24,TXN,Texas Instruments,US,Tech,0.362,0.098,878.92,True
+34,KER.PA,Kering,FR,ConsDisc,0.279,0.098,878.92,True
+54,MU,Micron Technology,US,Tech,0.199,0.098,878.92,True
+83,AMD,Advanced Micro Devices,US,Tech,0.123,0.098,878.92,True

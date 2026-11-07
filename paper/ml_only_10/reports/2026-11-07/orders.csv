@@ -1,0 +1,2 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+SELL,BAYN.DE,Bayer,DE,7.1404,55.58,EUR,331.16,0.83,resize
