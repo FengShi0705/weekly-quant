@@ -1,2 +1,6 @@
 signal_date,ticker,side,shares,reason
-2026-11-06,BAYN.DE,sell,7.1404,resize
+2026-11-13,AMD,sell,2.46,exit
+2026-11-13,KER.PA,buy,0.8599,resize
+2026-11-13,LRCX,buy,0.6773,resize
+2026-11-13,MU,buy,0.1471,resize
+2026-11-13,PANW,buy,3.93,enter

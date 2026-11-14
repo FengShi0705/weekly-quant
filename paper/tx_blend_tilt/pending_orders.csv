@@ -1,4 +1,7 @@
 signal_date,ticker,side,shares,reason
-2026-11-06,BAYN.DE,sell,5.9243,resize
-2026-11-06,UCG.MI,sell,6.6663,resize
-2026-11-06,AMAT,buy,1.0751,resize
+2026-11-13,AAL.L,buy,2.2891,resize
+2026-11-13,AMD,buy,0.3031,resize
+2026-11-13,BBVA.MC,buy,10.639,resize
+2026-11-13,CAT,buy,0.2016,resize
+2026-11-13,LRCX,buy,0.6458,resize
+2026-11-13,MU,buy,0.3441,resize

@@ -1,6 +1,6 @@
 # Trading 212 Practice vs simulation (main)
 
-**15 fills.** Value-weighted cost per trade: real **169 bps** (price vs the day's close +144 bps + fees 24 bps) against the model's **36 bps**: 4.7x the model (the go-live rule asks for no more than about 2x).
+**16 fills.** Value-weighted cost per trade: real **171 bps** (price vs the day's close +147 bps + fees 24 bps) against the model's **36 bps**: 4.8x the model (the go-live rule asks for no more than about 2x).
 
 Price vs close is noisy for any single trade (orders sent at the weekend fill at the open, the model assumes the close); only the average over many trades means much.
 
@@ -21,6 +21,7 @@ Price vs close is noisy for any single trade (orders sent at the weekend fill at
 | 2026-10-16    | 2026-10-19 | INGA.AS  | buy    |  25.727  |      648.39 |          144   |            15   |            159   |               25 |
 | 2026-10-16    | 2026-10-19 | BBVA.MC  | buy    |  33.363  |      644.46 |           92.4 |            15.1 |            107.4 |               45 |
 | 2026-10-16    | 2026-10-19 | UBSG.SW  | buy    |  18.022  |      636.77 |          -61.4 |            15.1 |            -46.3 |               25 |
+| 2026-11-06    | 2026-11-09 | BAYN.DE  | sell   |   4.383  |      201.1  |          286.1 |            14.9 |            301   |               25 |
 
 ## Account value
 
@@ -32,13 +33,14 @@ At each weekend run, both valued at Friday's close.
 | 2026-10-24 |       9426.27 |     9641.82 |      -215.55 |
 | 2026-10-31 |       9656.08 |     9789.51 |      -133.43 |
 | 2026-11-07 |       9259.66 |     9366.37 |      -106.71 |
+| 2026-11-14 |       9870.05 |    10049    |      -178.99 |
 
 ## Holdings that differ
 
-Valued at the 2026-11-06 close. Lists stocks held in only one account, and stocks in both whose share counts are more than 5% apart (smaller gaps from fill prices and rounding are left out).
+Valued at the 2026-11-13 close. Lists stocks held in only one account, and stocks in both whose share counts are more than 5% apart (smaller gaps from fill prices and rounding are left out).
 
 Both accounts hold the same stocks.
 
 | ticker   | name   | held in   | Trading 212 shares   | simulated shares   |   Trading 212 value |   simulated value |   difference |
 |:---------|:-------|:----------|:---------------------|:-------------------|--------------------:|------------------:|-------------:|
-| CASH     |        |           |                      |                    |               112.1 |            242.76 |      -130.66 |
+| CASH     |        |           |                      |                    |               312.9 |            440.68 |      -127.78 |

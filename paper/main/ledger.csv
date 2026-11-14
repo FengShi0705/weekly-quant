@@ -14,3 +14,4 @@ signal_date,exec_date,ticker,side,shares,price_GBP,value_GBP,cost_GBP,reason
 2026-10-16,2026-10-19,STAN.L,buy,30.7161,20.79,638.59,3.83,enter
 2026-10-16,2026-10-19,TXN,buy,3.1365,207.0766,649.5,1.62,enter
 2026-10-16,2026-10-19,UBSG.SW,buy,18.0221,35.575,641.14,1.6,enter
+2026-11-06,2026-11-09,BAYN.DE,sell,4.2,47.241,198.41,0.5,resize

@@ -1,0 +1,6 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+SELL,AMD,Advanced Micro Devices,US,2.46,534.06,USD,992.93,2.5,exit
+BUY,KER.PA,Kering,FR,0.8599,184.64,EUR,132.6,0.86,resize
+BUY,LRCX,Lam Research,US,0.6773,225.92,USD,115.65,0.29,resize
+BUY,MU,Micron Technology,US,0.1471,778.31,USD,86.53,0.22,resize
+BUY,PANW,Palo Alto Networks,US,3.93,322.24,USD,957.12,2.39,enter

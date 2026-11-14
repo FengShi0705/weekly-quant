@@ -9,3 +9,4 @@ signal_date,exec_date,ticker,side,shares,price_GBP,value_GBP,cost_GBP,reason
 2026-10-16,2026-10-19,MU,buy,1.48,678.5574,1004.26,2.51,enter
 2026-10-16,2026-10-19,ODFL,buy,6.9293,140.1132,970.89,2.43,enter
 2026-10-16,2026-10-19,TXN,buy,4.7047,207.0766,974.23,2.44,enter
+2026-11-06,2026-11-09,BAYN.DE,sell,7.1404,47.241,337.32,0.84,resize

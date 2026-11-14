@@ -14,3 +14,4 @@ signal_date,exec_date,ticker,side,shares,price_GBP,value_GBP,cost_GBP,reason
 2026-10-23,2026-10-26,SAN.MC,buy,67.7431,9.2412,626.03,2.82,enter
 2026-10-23,2026-10-26,STAN.L,buy,32.9359,20.1,662.01,3.97,enter
 2026-10-23,2026-10-26,UCG.MI,buy,10.8578,61.5308,668.09,3.01,enter
+2026-11-06,2026-11-09,BAYN.DE,sell,4.242,47.241,200.4,0.5,resize

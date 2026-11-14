@@ -1,0 +1,7 @@
+side,ticker,name,country,shares,ref_price_local,quote_ccy,est_value_GBP,est_cost_GBP,reason
+BUY,AAL.L,Anglo American,UK,2.2891,3765.0,GBp,86.18,0.52,resize
+BUY,AMD,Advanced Micro Devices,US,0.3031,534.06,USD,122.34,0.31,resize
+BUY,BBVA.MC,BBVA,ES,10.639,23.57,EUR,209.42,0.94,resize
+BUY,CAT,Caterpillar,US,0.2016,600.2,USD,91.45,0.23,resize
+BUY,LRCX,Lam Research,US,0.6458,225.92,USD,110.27,0.28,resize
+BUY,MU,Micron Technology,US,0.3441,778.31,USD,202.41,0.51,resize
